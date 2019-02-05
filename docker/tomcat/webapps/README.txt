@@ -1,0 +1,1 @@
+By default, the maven build will put the .war file into this folder which is then automatically deployed by tomcat.

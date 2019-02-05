@@ -1,6 +1,7 @@
-import java.util.List; 
-import java.util.Date;
-import java.util.Iterator; 
+package de.hitec.oaidashboard.database;
+
+import java.util.List;
+import java.util.Iterator;
  
 import org.hibernate.HibernateException; 
 import org.hibernate.Session; 
@@ -10,7 +11,7 @@ import org.hibernate.cfg.Configuration;
 
 public class ManageEmployee {
 	private static SessionFactory factory; 
-	public static void main(String[] args) {
+	public ManageEmployee() {
 
 		try {
 			factory = new Configuration().configure().buildSessionFactory();
@@ -19,24 +20,22 @@ public class ManageEmployee {
 			throw new ExceptionInInitializerError(ex); 
 		}
 
-		ManageEmployee ME = new ManageEmployee();
-
 		/* Add few employee records in database */
-		Integer empID1 = ME.addEmployee("Zara", "Ali", 1000);
-		Integer empID2 = ME.addEmployee("Daisy", "Das", 5000);
-		Integer empID3 = ME.addEmployee("John", "Paul", 10000);
+		Integer empID1 = addEmployee("Zara", "Ali", 1000);
+		Integer empID2 = addEmployee("Daisy", "Das", 5000);
+		Integer empID3 = addEmployee("John", "Paul", 10000);
 
 		/* List down all the employees */
-		ME.listEmployees();
+		listEmployees();
 
 		/* Update employee's records */
-		ME.updateEmployee(empID1, 5000);
+		updateEmployee(empID1, 5000);
 
 		/* Delete an employee from the database */
-		ME.deleteEmployee(empID2);
+		deleteEmployee(empID2);
 
 		/* List down new list of the employees */
-		ME.listEmployees();
+		listEmployees();
 	}
 
 	/* Method to CREATE an employee in the database */

@@ -1,3 +1,5 @@
+package de.hitec.oaidashboard.database;
+
 public class Employee {
 	private int id;
 	private String firstName; 

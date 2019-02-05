@@ -11,7 +11,7 @@ db:
    - ./db:/docker-entrypoint-initdb.d
 
 web:
-  image: tomcat:latest
+  build: ./tomcat_docker
   # Environment variables do not appear to be getting loaded the first time Tomcat starts!
   environment:
     JDBC_URL: jdbc:mysql://db:3306/example_db?connectTimeout=0&amp;socketTimeout=0&amp;autoReconnect=true

@@ -1,6 +1,6 @@
 package de.hitec.oaidashboard.rest;
 
-import de.hitec.oaidashboard.database.ManageEmployee;
+//import de.hitec.oaidashboard.database.ManageEmployee;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,7 +14,7 @@ public class TestServiceDB {
     @Produces(MediaType.TEXT_PLAIN)
     public String getTestService() throws IOException {
 
-        ManageEmployee empManager = new ManageEmployee();
+        //ManageEmployee empManager = new ManageEmployee();
 
         return "db test (save into and retrieve)";
     }

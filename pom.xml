@@ -52,6 +52,16 @@
       <artifactId>jersey-hk2</artifactId>
       <version>2.27</version>
     </dependency>
+    <dependency>
+    	<groupId>com.dslplatform</groupId>
+    	<artifactId>dsl-json-java8</artifactId>
+    	<version>1.8.5</version>
+    </dependency>
+    <dependency>
+    	<groupId>commons-io</groupId>
+    	<artifactId>commons-io</artifactId>
+    	<version>2.6</version>
+    </dependency>
   </dependencies>
 
   <build>

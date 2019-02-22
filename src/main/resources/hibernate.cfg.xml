@@ -3,13 +3,23 @@
         "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-        <property name = "hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+        <property name = "hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
+        <property name = "hibernate.dialect.storage_engine">innodb</property> 
         <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
-        <property name = "hibernate.connection.username">example_db_user</property>
-        <property name = "hibernate.connection.password">example_db_pass</property>
-        <property name = "hibernate.connection.url">jdbc:mysql://db:3306/example_db</property>
-         
-        <mapping resource="Employee.hbm.xml" />
+        <property name = "hibernate.connection.username">root</property>
+        <property name = "hibernate.connection.password">rootaccountpassword</property>
+        <property name = "hibernate.connection.url">jdbc:mysql://localhost/test</property>
+ 
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.Repository" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.State" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.MetadataFormat" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.Set" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.Record" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.License" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.StateLicenseMapper" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.StateSetMapper" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.StateFormatMapper" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.RecordSetMapper" />
  
     </session-factory>
 </hibernate-configuration>

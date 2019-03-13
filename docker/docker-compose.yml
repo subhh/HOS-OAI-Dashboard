@@ -1,5 +1,6 @@
 db:
   image: mysql:latest
+  command: --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs
   environment:
     MYSQL_ROOT_PASSWORD: nimda
     MYSQL_DATABASE: example_db

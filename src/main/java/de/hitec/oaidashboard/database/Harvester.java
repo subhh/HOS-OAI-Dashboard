@@ -18,6 +18,8 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Root;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -30,8 +32,8 @@ import de.hitec.oaidashboard.database.datastructures.Record;
 import de.hitec.oaidashboard.database.datastructures.RecordSetMapper;
 import de.hitec.oaidashboard.database.datastructures.Repository;
 import de.hitec.oaidashboard.database.datastructures.Set;
-// State could be confused with Thread.State
-//import de.hitec.oaidashboard.database.datastructures.State; 
+// HarvestingState could be confused with Thread.HarvestingState
+//import de.hitec.oaidashboard.database.datastructures.HarvestingState;
 import de.hitec.oaidashboard.database.datastructures.StateFormatMapper;
 import de.hitec.oaidashboard.database.datastructures.StateLicenseMapper;
 import de.hitec.oaidashboard.database.datastructures.StateSetMapper;
@@ -53,8 +55,10 @@ public class Harvester extends Thread {
 	private SessionFactory factory;
 	private de.hitec.oaidashboard.database.datastructures.State state;
 	public boolean reharvest;
-	
-	Harvester(Repository repo, String mip, String msp,
+
+    private static Logger logger = LogManager.getLogger(Class.class.getName());
+
+    Harvester(Repository repo, String mip, String msp,
 			String gd, String ed, SessionFactory factory) {
 		this.repo = repo;
 		this.metaIdPath = mip;
@@ -71,27 +75,30 @@ public class Harvester extends Thread {
 		if (instance != null)
 		{
 			state =	new de.hitec.oaidashboard.database.datastructures.State(
-							Timestamp.valueOf(LocalDateTime.now()), repo, "SUCCESS");
-			saveData(state);
-//			System.out.println("Repo-date:" + instance.identify.earliestDatestamp.toString());
+					Timestamp.valueOf(LocalDateTime.now()), repo, "SUCCESS");
+            saveData(state);
+			//System.out.println("Repo-date:" + instance.identify.earliestDatestamp.toString());
 			if (repo.updateOnChange(instance.identify.repositoryName,
 					instance.identify.baseURL, instance.identify.adminEmail.get(0)))
 			{
 				updateData(repo);
 			}
+			logger.info("Attempting to save sets for repo: {}", repo.getHarvestingUrl());
 			saveSets(instance.sets);
+            logger.info("Attempting to save formats for repo: {}", repo.getHarvestingUrl());
 			saveFormats(instance.formats);
+            logger.info("Starting Metha Sync for repo: {}", repo.getHarvestingUrl());
 			startMethaSync();
 			markSomeLicensesAsOpenOrClose();
 			computeStatistics();
 		}
 	}
 	
-	public void start () {
+	public void start() {
 		System.out.println("Start Harvesting " + repo.getHarvestingUrl() );
 		if (t == null) {
 			t = new Thread (this);
-			t.start ();
+			t.start();
 		}
 	}
 	
@@ -105,7 +112,7 @@ public class Harvester extends Thread {
 			id = (Object) session.save(input);
 		} catch (HibernateException e) {
 			if (tx!=null) tx.rollback();
-			e.printStackTrace(); 
+			logger.info("HibernateException while harvesting repo: {}", repo.getHarvestingUrl(), e);
 		} finally {
 			session.close(); 
 		}
@@ -223,7 +230,9 @@ public class Harvester extends Thread {
 			Object status = null; // returns id if save succeeds
 			if (set == null)
 			{
+                logger.info("Instantiating new Set with name: '{}' and spec: '{}' for repo: {}", mSet.setName, mSet.setSpec, repo.getHarvestingUrl());
 				set = new Set(mSet.setName, mSet.setSpec);
+
 				status = saveData(set);
 				if (status != null)
 				{

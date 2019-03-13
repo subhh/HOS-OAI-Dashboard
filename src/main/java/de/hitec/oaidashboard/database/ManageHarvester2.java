@@ -1,31 +1,28 @@
 package de.hitec.oaidashboard.database;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.EnumSet;
-
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
-
+import de.hitec.oaidashboard.database.datastructures2.Repository;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.query.Query;
-import org.hibernate.HibernateException; 
-import org.hibernate.Session; 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
-import de.hitec.oaidashboard.database.datastructures.Repository;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
 
-public class ManageHarvester {
+public class ManageHarvester2 {
 
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
 	private static final String METHA_ID_PATH = "/usr/sbin/metha-id";
@@ -60,8 +57,7 @@ public class ManageHarvester {
 		return export;
 	}
 
-	private void saveBasicRepoInfo(String name, String url)
-	{
+	private static void saveBasicRepoInfo(String name, String url) {
 		Session session = factory.openSession();
 		Transaction tx = null;
 
@@ -80,7 +76,7 @@ public class ManageHarvester {
 		}
 	}
 
-	private ArrayList<Repository> getActiveReposFromDB() {
+	private static ArrayList<Repository> getActiveReposFromDB() {
 		ArrayList<Repository> repositories = null;
 		Session session = factory.openSession();
 		Transaction tx = null;
@@ -128,62 +124,99 @@ public class ManageHarvester {
 		System.out.println("Export OK");
 	}
 
-	public static void main(String[] args) throws IOException {
+	private static void resetDatabase(SchemaExport export, Metadata metadata) {
+		logger.info("Dropping all tables of database...");
+		dropDataBase(export, metadata);
+		logger.info("Creating all tables  Database...");
+		createDataBase(export, metadata);
+		logger.info("Setting up default repositories...");
+		setUpDefaultRepositories();
+	}
 
-        logger.info("TEST");
-
-		ManageHarvester MH = new ManageHarvester();
+	private static void initDatabase() {
+		// read config and create necessary objects
 		String configFileName = "hibernate.cfg.xml";
 		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-	               .configure(configFileName).build();
-		Metadata metadata = new MetadataSources(serviceRegistry).getMetadataBuilder().build();
+				.configure(configFileName).build();
+		Metadata metadata = new MetadataSources(serviceRegistry)
+				.getMetadataBuilder().build();
 		SchemaExport export = getSchemaExport();
-		
+
+		// init buildSessionFactory
 		try {
 			factory = metadata.buildSessionFactory();
-		} catch (Throwable ex) { 
+		} catch (Throwable ex) {
 			System.err.println("Failed to create sessionFactory object." + ex);
-			throw new ExceptionInInitializerError(ex); 
+			throw new ExceptionInInitializerError(ex);
 		}
 
-		if (RESET_DATABASE)
-		{
-			System.out.println("Drop Database...");
-	    	dropDataBase(export, metadata);
-			System.out.println("Create Database...");
-			createDataBase(export, metadata);
-			
-			MH.saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
-			MH.saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY",
-					"http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
-			MH.saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU",
-					"http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
-			MH.saveBasicRepoInfo("Beispiel-Volltextrepository",
-					"http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
-			MH.saveBasicRepoInfo("HAW OPUS",
-					"http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+		// reset database when appropriate setting is true
+		if (RESET_DATABASE) {
+			resetDatabase(export, metadata);
 		}
-		
-		ArrayList<Repository> repositories = MH.getActiveReposFromDB();
+	}
+
+	private static void setUpDefaultRepositories() {
+		saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
+		saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
+		saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
+		saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
+		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+	}
+
+	public static void main(String[] args) throws IOException {
+		initDatabase();
+
+		List<Repository> repositories = getActiveReposFromDB();
 		if (repositories != null) {
-			ArrayList<Harvester> harvesters = new ArrayList<Harvester>();
-			for(Repository repo : repositories) {
-				Harvester harv = new Harvester(repo, METHA_ID_PATH, METHA_SYNC_PATH,
-						GIT_DIRECTORY, EXPORT_DIRECTORY, factory);
-				harv.reharvest = REHARVEST;
-				harvesters.add(harv);
-				harv.start();
+
+			// First step: MultiThreaded collection of data (Json, XML etc.)
+			Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
+
+			// Second step: SingleThreaded instantiation of Model and saving to Database
+			instantiateAndSaveModels(repoHarvesterMap);
+
+			logger.info("Finished.");
+		}
+	}
+
+	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories) {
+    	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();
+
+		for(Repository repo : repositories) {
+			DataHarvester dataHarvester = new DataHarvester(repo.getHarvestingUrl(), METHA_ID_PATH, METHA_SYNC_PATH,
+					GIT_DIRECTORY, EXPORT_DIRECTORY);
+			//harv.reharvest = REHARVEST;
+			repoHarvesterMap.put(repo, dataHarvester);
+			dataHarvester.start();
+		}
+		logger.info("Waiting for DataHarvesters to finish ...");
+		for (DataHarvester dataHarvester : repoHarvesterMap.values()) {
+			try	{
+				dataHarvester.t.join();
+				// TODO: if no success: generate failed state and save to DB
 			}
-			System.out.println("Waiting for Harvesters to finish ...");
-			for (Harvester harv : harvesters) {
-				try	{
-					harv.t.join();
-				}
-				catch (Exception ex) {
-					System.out.println("An error occurred while harvesting " + harv.getRepoUrl() + " " + ex);
-				}
+
+			catch (Exception ex) {
+				logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), ex);
 			}
-			System.out.println("Finished.");
+		}
+		return repoHarvesterMap;
+	}
+
+	private static void instantiateAndSaveModels(Map<Repository, DataHarvester> repoHarvesterMap) {
+    	for(Map.Entry entry: repoHarvesterMap.entrySet()) {
+    		Repository repository = (Repository) entry.getKey();
+    		DataHarvester dataHarvester = (DataHarvester) entry.getValue();
+    		HarvestingDataModel harvestingDataModel = new HarvestingDataModel(repository, dataHarvester, factory);
+
+			/**
+			 * IMPORTANT: the saving operation should always be done directly after instantiating a new HarvestingDataModel-Object
+			 * or before creating a new one.
+			 * If you create multiple HarvestingDataModels without saving in between, you can easily create inconsistencies in the Database,
+			 * for example doublets of MetadataFormats, Sets, Records etc.
+			 */
+    		harvestingDataModel.saveDataModel();
 		}
 	}
 }

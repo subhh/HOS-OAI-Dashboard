@@ -3,6 +3,7 @@ package de.hitec.oaidashboard.parsers;
 import java.io.*;
 import com.dslplatform.json.*;
 import com.dslplatform.json.runtime.Settings;
+import de.hitec.oaidashboard.parsers.datastructures.Format;
 import org.apache.commons.io.IOUtils;
 import de.hitec.oaidashboard.parsers.datastructures.MethaIdStructure;
 

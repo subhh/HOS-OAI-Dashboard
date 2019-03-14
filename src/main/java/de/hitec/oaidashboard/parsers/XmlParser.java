@@ -23,6 +23,7 @@ public class XmlParser {
     static final String SETSPEC = "setSpec";
     static final String METADATA = "metadata";
     static final String RIGHTS = "rights";
+    static final String IDENTIFIER = "identifier";
 
 	public ArrayList<HarvestedRecord> getRecords(Path input_filepath, Path output_filepath) throws Exception
 	{
@@ -112,6 +113,14 @@ public class XmlParser {
 
                                                         	event = eventReader.nextEvent();
                                                             record.dateStamp = (String) event.asCharacters().getData();
+                                                            continue;
+                                                        }
+                                                    }
+                                                    if (event.isStartElement()) {
+                                                        startElement = event.asStartElement();
+                                                        if (startElement.getName().getLocalPart().equals(IDENTIFIER)) {
+                                                            event = eventReader.nextEvent();
+                                                            record.identifier = (String) event.asCharacters().getData();
                                                             continue;
                                                         }
                                                     }

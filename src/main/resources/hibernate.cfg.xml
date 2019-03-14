@@ -16,6 +16,8 @@
  		<mapping class = "de.hitec.oaidashboard.database.datastructures2.HarvestingState" />
  		<mapping class = "de.hitec.oaidashboard.database.datastructures2.MetadataFormat" />
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.OAISet" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateSetMapper" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.Record" />
 
     </session-factory>
 </hibernate-configuration>

@@ -1,22 +1,33 @@
 package de.hitec.oaidashboard.database.datastructures2;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import de.hitec.oaidashboard.database.datastructures.State;
+
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "OAISET",
         uniqueConstraints = { @UniqueConstraint(columnNames = { "set_id" }) })
 
 public class OAISet {
+
+    @Id
+    @GeneratedValue(strategy=GenerationType.IDENTITY)
+    @Column(name = "set_id")
     private int id;
+
+    @NotNull
+    @Column(name = "set_name", length = 200)
     private String name;
+
+    @NotNull
+    @Column(name = "set_spec", length = 200)
     private String spec;
+
+    @OneToMany(mappedBy = "set", cascade = CascadeType.ALL)
+    private Set<StateSetMapper> stateSetMappers = new HashSet<>();
 
     public OAISet() {}
     public OAISet(String name, String spec) {
@@ -24,9 +35,6 @@ public class OAISet {
         this.spec = spec;
     }
 
-    @Id
-    @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name = "set_id")
     public int getId() {
         return id;
     }
@@ -37,8 +45,6 @@ public class OAISet {
         this.id = id;
     }
 
-    @NotNull
-    @Column(name = "set_name", length = 200)
     public String getName() {
         return name;
     }
@@ -47,13 +53,23 @@ public class OAISet {
         this.name = name;
     }
 
-    @NotNull
-    @Column(name = "set_spec", length = 200)
     public String getSpec() {
         return spec;
     }
 
     public void setSpec( String spec ) {
         this.spec = spec;
+    }
+
+    public Set<StateSetMapper> getStateSetMappers() {
+        return stateSetMappers;
+    }
+
+    public void setStateSetMappers(Set<StateSetMapper> stateSetMappers) {
+        this.stateSetMappers = stateSetMappers;
+    }
+
+    public void addStateSetMapper(StateSetMapper stateSetMapper) {
+        this.stateSetMappers.add(stateSetMapper);
     }
 }

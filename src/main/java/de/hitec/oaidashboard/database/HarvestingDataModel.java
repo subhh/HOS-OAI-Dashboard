@@ -1,15 +1,12 @@
 package de.hitec.oaidashboard.database;
 
-import de.hitec.oaidashboard.database.datastructures2.HarvestingState;
-import de.hitec.oaidashboard.database.datastructures2.MetadataFormat;
-import de.hitec.oaidashboard.database.datastructures2.OAISet;
-import de.hitec.oaidashboard.database.datastructures2.Repository;
+import de.hitec.oaidashboard.database.datastructures2.*;
 import de.hitec.oaidashboard.database.validation.DataModelValidator;
 import de.hitec.oaidashboard.parsers.datastructures.Format;
+import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
 import de.hitec.oaidashboard.parsers.datastructures.MethaSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -21,7 +18,9 @@ import javax.persistence.criteria.Root;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class HarvestingDataModel {
 
@@ -31,7 +30,9 @@ public class HarvestingDataModel {
 
     private HarvestingState state = null;
 
-    private static Logger logger = LogManager.getLogger(Class.class.getName());
+    private List<Record> records = null;
+
+    private static Logger logger = LogManager.getRootLogger();
 
     public HarvestingDataModel(Repository repository, DataHarvester dataHarvester, SessionFactory factory) {
 
@@ -46,6 +47,7 @@ public class HarvestingDataModel {
 
         List<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
         List<OAISet> oaiSets = new ArrayList<>(); // oaiSets may be empty
+        //List<Record> records = null; // records may not be empty -> do not instantiate empty list
 
         // convert all Data (raw) to Java/Hibernate-DataModel
         try {
@@ -54,6 +56,9 @@ public class HarvestingDataModel {
 
             logger.info("Getting OAISets (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
             oaiSets = getOrCreateOAISets(dataHarvester.getSets());
+
+            logger.info("Getting Records (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
+            records = createRecords(dataHarvester.getRecords());
 
         } catch (DataModelException dataModelException) {
             dataModelException.printStackTrace();
@@ -66,14 +71,54 @@ public class HarvestingDataModel {
         // create state SUCCESS and connect all data
         state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "SUCCESS");
 
-        if(metadataFormats != null) {
+        if(metadataFormats != null && records != null) {
             logger.info("Adding MetadataFormats to current HarvestingState for repo: {}", repository.getHarvestingUrl());
             state.setMetadataFormats(metadataFormats);
+
             logger.info("Adding OAISets to current HarvestingState for repo: {}", repository.getHarvestingUrl());
             for(OAISet oaiSet: oaiSets) {
                 DataModelValidator.isValidOAISet(oaiSet);
             }
-            state.setOaiSets(oaiSets);
+            mapStateToSets(state, oaiSets);
+
+            logger.info("Adding Records to current HarvestingState for repo: {}", repository.getHarvestingUrl());
+            mapRecordsToState(state, records);
+
+            logger.info("Mapping Records and Sets for current HarvestingState for repo: {}", repository.getHarvestingUrl());
+            mapRecordsToSets(records, oaiSets);
+
+            //state.setOaiSets(oaiSets);
+        }
+    }
+
+    private void mapStateToSets(HarvestingState state, List<OAISet> oaiSets) {
+        Set<StateSetMapper> stateSetMappers = new HashSet<>();
+        for(OAISet oaiSet: oaiSets) {
+            StateSetMapper stateSetMapper = new StateSetMapper(state, oaiSet); // reuse of StateSetMapper from Database makes no sense
+            stateSetMapper.setRecordCount(10);
+            stateSetMappers.add(stateSetMapper);
+        }
+        state.setStateSetMappers(stateSetMappers);
+    }
+
+    private void mapRecordsToState(HarvestingState state, List<Record> records) {
+        for(Record record: records) {
+            record.setState(state);
+        }
+    }
+
+    private void mapRecordsToSets(List<Record> records, List<OAISet> oaiSets) {
+        for(Record record: records) {
+            List<OAISet> mappedSets = new ArrayList<>();
+            List<String> set_specs = record.getSet_specs();
+            for(OAISet oaiSet: oaiSets) {
+                for(String set_spec: set_specs) {
+                    if (set_spec.equals(oaiSet.getSpec())) {
+                        mappedSets.add(oaiSet);
+                    }
+                }
+            }
+            record.setOaiSets(mappedSets);
         }
     }
 
@@ -82,9 +127,9 @@ public class HarvestingDataModel {
         for (Format mFormat : metadataFormatsRaw) {
             MetadataFormat mf = getMFormatObject(mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
             if(mf != null) {
-                logger.info("Got MetadataFormat from Database - name: {} id: {}", mf.getFormatPrefix(), mf.getMetadataformat_id());
+                logger.debug("Got MetadataFormat from Database - name: {} id: {}", mf.getFormatPrefix(), mf.getMetadataformat_id());
             } else if (mf == null) {
-                logger.info("Creating new MetadataFormat with prefix: {}", mFormat.metadataPrefix);
+                logger.debug("Creating new MetadataFormat with prefix: {}", mFormat.metadataPrefix);
                 mf = new MetadataFormat(mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
             }
             metadataFormats.add(mf);
@@ -97,15 +142,44 @@ public class HarvestingDataModel {
         for (MethaSet set : setsRaw) {
             OAISet oaiSet = getSetObject(set.setName, set.setSpec);
             if(oaiSet != null) {
-                logger.info("Got OAISet from Database - name: '{}', spec: '{}', id: {}", oaiSet.getName(), oaiSet.getSpec(), oaiSet.getId());
+                logger.debug("Got OAISet from Database - name: '{}', spec: '{}', id: {}", oaiSet.getName(), oaiSet.getSpec(), oaiSet.getId());
             } else if (oaiSet == null) {
-                logger.info("Creating new OAISet with name: '{}' and spec: '{}'", set.setName, set.setSpec);
+                logger.debug("Creating new OAISet with name: '{}' and spec: '{}'", set.setName, set.setSpec);
                 oaiSet = new OAISet(set.setName, set.setSpec);
             }
             oaiSets.add(oaiSet);
         }
         return oaiSets;
     }
+
+    // TODO: currently we always need to create new records, there seems to be no way to prevent this, no matter the solution (with a mapping table, there will be a number of new mappings equal the number of records, each time (harvestRun)
+/*    private List<Record> getOrCreateRecords(List<HarvestedRecord> recordsRaw) throws DataModelException {
+        List<Record> records = new ArrayList<>();
+        for (HarvestedRecord recordRaw : recordsRaw) {
+            Record record = getRecordObject(recordRaw.identifier);
+            if(record != null) {
+                logger.info("Got Record from Database - identifier: '{}'", record.getIdentifier());
+            } else if (record == null) {
+                logger.info("Creating new Record with identifier: '{}'", recordRaw.identifier);
+                record = new Record(recordRaw.identifier);
+            }
+            record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
+            records.add(record);
+        }
+        return records;
+    }*/
+
+    private List<Record> createRecords(List<HarvestedRecord> recordsRaw) throws DataModelException {
+        List<Record> records = new ArrayList<>();
+        for (HarvestedRecord recordRaw : recordsRaw) {
+            logger.debug("Creating new Record with identifier: '{}'", recordRaw.identifier);
+            Record record = new Record(recordRaw.identifier);
+            record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
+            records.add(record);
+        }
+        return records;
+    }
+
 
     private OAISet getSetObject(String name, String spec) throws DataModelException {
         OAISet oaiSet = null;
@@ -163,18 +237,50 @@ public class HarvestingDataModel {
         return mf;
     }
 
-    public void saveDataModel() {
-        saveDataModelIntern(false);
+    private Record getRecordObject(String identifier) throws DataModelException {
+        Record mf = null;
+        Session session = factory.openSession();
+        Transaction tx = null;
+        try {
+            tx = session.beginTransaction();
+
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Record> criteria = builder.createQuery(Record.class);
+
+            Root<Record> root = criteria.from(Record.class);
+            criteria.select(root).where(builder.equal(root.get("identifier"), identifier));
+
+            Query<Record> q = session.createQuery(criteria);
+            if (!q.getResultList().isEmpty()) {
+                mf = (Record) q.uniqueResult();
+            }
+            tx.commit();
+        } catch (Exception e) {
+            if (tx!=null) tx.rollback();
+            e.printStackTrace();
+            throw new DataModelException(e.getMessage());
+        } finally {
+            session.close();
+        }
+        return mf;
     }
 
-    private void saveDataModelIntern(boolean fallback) {
+    public void saveDataModel() {
+        saveDataModel(false);
+    }
+
+    private void saveDataModel(boolean fallback) {
         if(state != null) {
+            logger.info("Attempting to save HarvestingState into database for repo: {}", repository.getHarvestingUrl());
             Session session = factory.openSession();
             Transaction tx = session.beginTransaction();
             Object id = null;
 
             try {
                 session.save(state);
+                for(Record record: records) {
+                    session.save(record);
+                }
                 tx.commit();
             } catch (Exception e) {
                 if (tx != null) tx.rollback();
@@ -182,7 +288,7 @@ public class HarvestingDataModel {
                 if(!fallback) {
                     createFailedState();
                     session.close();
-                    saveDataModelIntern(true);
+                    saveDataModel(true);
                 } else {
                     /**
                      * A catastrophic failure must be happening, possible causes:

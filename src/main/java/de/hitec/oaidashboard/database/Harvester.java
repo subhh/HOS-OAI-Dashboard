@@ -249,8 +249,7 @@ public class Harvester extends Thread {
 	}
 
 	private void saveFormats(ArrayList<Format> formats) {
-		for (Format mFormat : formats)
-		{
+		for (Format mFormat : formats) {
 			MetadataFormat mf = getMFormatObject(
 					mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
 			Object status = null; // returns id if save succeeds

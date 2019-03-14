@@ -6,7 +6,8 @@ public class HarvestedRecord {
 	public ArrayList<String> specList;
     public String rights;
     public String dateStamp;
-	
+    public String identifier;
+
     public HarvestedRecord()
     {
     	specList = new ArrayList<String>();

@@ -4,6 +4,7 @@ import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "STATE",
@@ -57,12 +58,8 @@ public class HarvestingState {
     //@ElementCollection(targetClass = MetadataFormat.class)
 	private List<MetadataFormat> metadataFormats = new ArrayList<>();
 
-	@ManyToMany(cascade = CascadeType.ALL)
-	@JoinTable(name = "STATESETMAPPER",
-			joinColumns = @JoinColumn(name = "state_id"),
-			inverseJoinColumns = @JoinColumn(name = "set_id"))
-	//@ElementCollection(targetClass = MetadataFormat.class)
-	private List<OAISet> oaiSets = new ArrayList<>();
+	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+	private Set<StateSetMapper> stateSetMappers;
 
 	public HarvestingState() {}
 	public HarvestingState(Timestamp timestamp, Repository repo, String status) {
@@ -89,7 +86,6 @@ public class HarvestingState {
 	public void setRecordCount( long rc ) {
 		this.recordCount = rc;
 	}
-
 
 	public Timestamp getTimestamp() {
 		return timestamp;
@@ -183,15 +179,11 @@ public class HarvestingState {
 	    this.getMetadataFormats().add(metadataFormat);
     }
 
-	public List<OAISet> getOaiSets() {
-		return oaiSets;
+	public Set<StateSetMapper> getStateSetMappers() {
+		return stateSetMappers;
 	}
 
-	public void setOaiSets(List<OAISet> oaiSets) {
-		this.oaiSets = oaiSets;
-	}
-
-	public void addOAISet(OAISet oaiSet){
-		this.getOaiSets().add(oaiSet);
+	public void setStateSetMappers(Set<StateSetMapper> stateSetMappers) {
+		this.stateSetMappers = stateSetMappers;
 	}
 }

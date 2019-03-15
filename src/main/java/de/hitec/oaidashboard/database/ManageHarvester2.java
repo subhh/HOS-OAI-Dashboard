@@ -1,5 +1,6 @@
 package de.hitec.oaidashboard.database;
 
+import de.hitec.oaidashboard.aggregation.DataAggregator;
 import de.hitec.oaidashboard.database.datastructures2.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,10 +36,10 @@ public class ManageHarvester2 {
 	// Also, the metha-id answer will be stored here. 
 //	private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static final boolean RESET_DATABASE = true;
+	private static final boolean RESET_DATABASE = false;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static final boolean REHARVEST = true;
+	private static final boolean REHARVEST = false;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -158,10 +159,10 @@ public class ManageHarvester2 {
 
 	private static void setUpDefaultRepositories() {
 		saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
-		saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
-		saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
-		saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
-		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+		//saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
+		//saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
+		//saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
+		//saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -170,16 +171,31 @@ public class ManageHarvester2 {
 		List<Repository> repositories = getActiveReposFromDB();
 		if (repositories != null) {
 
-			// First step: MultiThreaded collection of data (Json, XML etc.)
+			// First Step: MultiThreaded collection of data (Json, XML etc.)
 			Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
 
-			// TODO: Second step (instantation of model -> data aggregration), then third step = saving to database
+			// From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
+			for(Map.Entry entry: repoHarvesterMap.entrySet()) {
+				Repository repository = (Repository) entry.getKey();
+				DataHarvester dataHarvester = (DataHarvester) entry.getValue();
 
-			// Third step: SingleThreaded instantiation of Model and saving to Database
-			instantiateAndSaveModels(repoHarvesterMap);
+				// Second Step: instatiation of model
+				HarvestingDataModel harvestingDataModel = new HarvestingDataModel(repository, dataHarvester, factory);
 
-			logger.info("Finished.");
+				// Third Step: data aggregation (counting records, licences etc., mapping licences and more)
+				DataAggregator dataAggregator = new DataAggregator(harvestingDataModel);
+
+				// Fourth Step: Saving model to Database
+				/**
+				 * IMPORTANT: the saving operation should always be done directly after instantiating a new HarvestingDataModel-Object
+				 * or before creating a new one.
+				 * If you create multiple HarvestingDataModels without saving in between, you can easily create inconsistencies in the Database,
+				 * for example doublets of MetadataFormats, Sets, Records etc.
+				 */
+				harvestingDataModel.saveDataModel();
+			}
 		}
+		logger.info("Finished.");
 	}
 
 /*	public static void main(String[] args) throws IOException {
@@ -213,7 +229,7 @@ public class ManageHarvester2 {
 
 		for(Repository repo : repositories) {
 			DataHarvester dataHarvester = new DataHarvester(repo.getHarvestingUrl(), METHA_ID_PATH, METHA_SYNC_PATH,
-					GIT_DIRECTORY, EXPORT_DIRECTORY);
+					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			//harv.reharvest = REHARVEST;
 			repoHarvesterMap.put(repo, dataHarvester);
 			dataHarvester.start();
@@ -230,22 +246,6 @@ public class ManageHarvester2 {
 			}
 		}
 		return repoHarvesterMap;
-	}
-
-	private static void instantiateAndSaveModels(Map<Repository, DataHarvester> repoHarvesterMap) {
-    	for(Map.Entry entry: repoHarvesterMap.entrySet()) {
-    		Repository repository = (Repository) entry.getKey();
-    		DataHarvester dataHarvester = (DataHarvester) entry.getValue();
-    		HarvestingDataModel harvestingDataModel = new HarvestingDataModel(repository, dataHarvester, factory);
-
-			/**
-			 * IMPORTANT: the saving operation should always be done directly after instantiating a new HarvestingDataModel-Object
-			 * or before creating a new one.
-			 * If you create multiple HarvestingDataModels without saving in between, you can easily create inconsistencies in the Database,
-			 * for example doublets of MetadataFormats, Sets, Records etc.
-			 */
-    		harvestingDataModel.saveDataModel();
-		}
 	}
 }
 

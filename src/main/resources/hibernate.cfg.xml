@@ -19,6 +19,7 @@
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateSetMapper" />
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.Record" />
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.Licence" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateLicenceMapper" />
 
     </session-factory>
 </hibernate-configuration>

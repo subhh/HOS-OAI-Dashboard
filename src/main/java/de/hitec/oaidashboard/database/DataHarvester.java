@@ -1,9 +1,5 @@
 package de.hitec.oaidashboard.database;
 
-import com.sun.swing.internal.plaf.metal.resources.metal;
-import de.hitec.oaidashboard.database.datastructures.Set;
-import de.hitec.oaidashboard.database.datastructures2.HarvestingState;
-import de.hitec.oaidashboard.database.datastructures2.Repository;
 import de.hitec.oaidashboard.parsers.JsonParser;
 import de.hitec.oaidashboard.parsers.XmlParser;
 import de.hitec.oaidashboard.parsers.datastructures.Format;
@@ -13,12 +9,10 @@ import de.hitec.oaidashboard.parsers.datastructures.MethaSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.SessionFactory;
 
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,7 +28,7 @@ public class DataHarvester extends Thread {
     private final String gitDirectory;
     private final String exportDirectory;
 
-    private final boolean reharvest = false;
+    private boolean reharvest;
 
     public boolean success = false;
 
@@ -47,12 +41,13 @@ public class DataHarvester extends Thread {
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
     DataHarvester(String harvestingURL, String mip, String msp,
-                  String gd, String ed) {
+                  String gd, String ed, boolean reharvest) {
         this.harvestingURL = harvestingURL;
         this.metaIdPath = mip;
         this.metaSyncPath = msp;
         this.gitDirectory = gd;
         this.exportDirectory = ed;
+        this.reharvest = reharvest;
     }
 
     public void start() {

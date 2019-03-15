@@ -40,7 +40,7 @@ public class Record {
 
     // not managed by Hibernate!
 	@Transient
-	private String licence_str;
+	private String licence_str_transient;
 
 	public Record() {}
 	public Record(String identifier) {
@@ -93,11 +93,11 @@ public class Record {
         this.set_specs = set_specs;
     }
 
-	public String getLicence_str() {
-		return licence_str;
+	public String getLicence_str_transient() {
+		return licence_str_transient;
 	}
 
-	public void setLicence_str(String licence_str) {
-		this.licence_str = licence_str;
+	public void setLicence_str_transient(String licence_str_transient) {
+		this.licence_str_transient = licence_str_transient;
 	}
 }

@@ -61,6 +61,9 @@ public class HarvestingState {
 	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
 	private Set<StateSetMapper> stateSetMappers;
 
+	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+	private Set<StateLicenceMapper> stateLicenceMappers;
+
 	public HarvestingState() {}
 	public HarvestingState(Timestamp timestamp, Repository repo, String status) {
 		this.timestamp = timestamp;
@@ -185,5 +188,13 @@ public class HarvestingState {
 
 	public void setStateSetMappers(Set<StateSetMapper> stateSetMappers) {
 		this.stateSetMappers = stateSetMappers;
+	}
+
+	public Set<StateLicenceMapper> getStateLicenceMappers() {
+		return stateLicenceMappers;
+	}
+
+	public void setStateLicenceMappers(Set<StateLicenceMapper> stateLicenceMappers) {
+		this.stateLicenceMappers = stateLicenceMappers;
 	}
 }

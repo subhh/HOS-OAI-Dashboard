@@ -30,7 +30,8 @@ public class HarvestingDataModel {
 
     private HarvestingState state = null;
 
-    private List<Record> records = null;
+    private List<Record> records = null; // records may not be empty -> do not instantiate empty list
+    List<OAISet> oaiSets = new ArrayList<>(); // oaiSets may be empty
 
     private static Logger logger = LogManager.getRootLogger();
 
@@ -46,8 +47,6 @@ public class HarvestingDataModel {
     private void initDataModel() {
 
         List<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
-        List<OAISet> oaiSets = new ArrayList<>(); // oaiSets may be empty
-        //List<Record> records = null; // records may not be empty -> do not instantiate empty list
         List<Licence> licences = null; // licences may be not be empty -> do not instantiate empty list
 
         // convert all Data (raw) to Java/Hibernate-DataModel
@@ -94,15 +93,24 @@ public class HarvestingDataModel {
             logger.info("Mapping Records and Licences to current HarvestingState for repo: {}", repository.getHarvestingUrl());
             mapRecordsToLicences(records, licences);
 
-            //state.setOaiSets(oaiSets);
+            logger.info("Mapping Licences to State for current HarvestingState for repo: {}", repository.getHarvestingUrl());
+            mapStateToLicences(state, licences);
         }
+    }
+
+    private void mapStateToLicences(HarvestingState state, List<Licence> licences) {
+        Set<StateLicenceMapper> stateLicenseMappers = new HashSet<>();
+        for(Licence licence: licences) {
+            StateLicenceMapper stateLicenseMapper = new StateLicenceMapper(state, licence);
+            stateLicenseMappers.add(stateLicenseMapper);
+        }
+        state.setStateLicenceMappers(stateLicenseMappers);
     }
 
     private void mapStateToSets(HarvestingState state, List<OAISet> oaiSets) {
         Set<StateSetMapper> stateSetMappers = new HashSet<>();
         for(OAISet oaiSet: oaiSets) {
             StateSetMapper stateSetMapper = new StateSetMapper(state, oaiSet); // reuse of StateSetMapper from Database makes no sense
-            stateSetMapper.setRecordCount(10);
             stateSetMappers.add(stateSetMapper);
         }
         state.setStateSetMappers(stateSetMappers);
@@ -132,7 +140,7 @@ public class HarvestingDataModel {
     private void mapRecordsToLicences(List<Record> records, List<Licence> licences) {
         for(Record record: records) {
             Licence mappedLicence = null;
-            String licence_str = record.getLicence_str();
+            String licence_str = record.getLicence_str_transient();
             logger.debug("record: '{}', licence_str: '{}'", record.getIdentifier(), licence_str);
             for(Licence licence: licences) {
                 if(licence_str.equals(licence.getName())){
@@ -157,6 +165,7 @@ public class HarvestingDataModel {
             } else if (mf == null) {
                 logger.debug("Creating new MetadataFormat with prefix: {}", mFormat.metadataPrefix);
                 mf = new MetadataFormat(mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
+                logger.info("ID TEST: {}", mf.getMetadataformat_id());
             }
             metadataFormats.add(mf);
         }
@@ -180,17 +189,22 @@ public class HarvestingDataModel {
 
     private List<Licence> getOrCreateLicences(List<HarvestedRecord> recordsRaw) throws DataModelException {
         List<Licence> licences = new ArrayList<>();
+        Set<String> licencesRaw = new HashSet<>();
         for(HarvestedRecord recordRaw: recordsRaw) {
             String licence_str = recordRaw.rights;
-            Licence licence = getLicenceObject(licence_str);
+            licencesRaw.add(licence_str);
+        }
+        for(String licenceRaw: licencesRaw) {
+            Licence licence = getLicenceObject(licenceRaw);
             if(licence != null) {
                 logger.debug("Got Licence from Database - name: '{}', id: {}", licence.getName(), licence.getId());
             } else if(licence == null) {
-                logger.debug("Creating new Licence with name: '{}'", licence_str);
-                licence = new Licence(licence_str);
+                logger.debug("Creating new Licence with name: '{}'", licenceRaw);
+                licence = new Licence(licenceRaw);
             }
             licences.add(licence);
         }
+        logger.debug("Got {} Licences!", licences.size());
         return licences;
     }
 
@@ -217,7 +231,7 @@ public class HarvestingDataModel {
             logger.debug("Creating new Record with identifier: '{}'", recordRaw.identifier);
             Record record = new Record(recordRaw.identifier);
             record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
-            record.setLicence_str(recordRaw.rights); // licence_str from raw record, not managed by Hibernate
+            record.setLicence_str_transient(recordRaw.rights); // licence_str from raw record, not managed by Hibernate
             records.add(record);
         }
         return records;
@@ -382,5 +396,17 @@ public class HarvestingDataModel {
 
     private void createFailedState() {
         state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "FAILURE");
+    }
+
+    public HarvestingState getState() {
+        return this.state;
+    }
+
+    public List<Record> getRecords() {
+        return this.records;
+    }
+
+    public List<OAISet> getOaiSets() {
+        return this.oaiSets;
     }
 }

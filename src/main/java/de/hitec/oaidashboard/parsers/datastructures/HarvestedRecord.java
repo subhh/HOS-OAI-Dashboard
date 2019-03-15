@@ -11,7 +11,7 @@ public class HarvestedRecord {
     public HarvestedRecord()
     {
     	specList = new ArrayList<String>();
-    	rights   = null;
+    	rights   = "NO_RIGHTS";
     	dateStamp = "";
     }
 }

@@ -48,6 +48,7 @@ public class HarvestingDataModel {
         List<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
         List<OAISet> oaiSets = new ArrayList<>(); // oaiSets may be empty
         //List<Record> records = null; // records may not be empty -> do not instantiate empty list
+        List<Licence> licences = null; // licences may be not be empty -> do not instantiate empty list
 
         // convert all Data (raw) to Java/Hibernate-DataModel
         try {
@@ -59,6 +60,9 @@ public class HarvestingDataModel {
 
             logger.info("Getting Records (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
             records = createRecords(dataHarvester.getRecords());
+
+            logger.info("Getting Licences (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
+            licences = getOrCreateLicences(dataHarvester.getRecords());
 
         } catch (DataModelException dataModelException) {
             dataModelException.printStackTrace();
@@ -86,6 +90,9 @@ public class HarvestingDataModel {
 
             logger.info("Mapping Records and Sets for current HarvestingState for repo: {}", repository.getHarvestingUrl());
             mapRecordsToSets(records, oaiSets);
+
+            logger.info("Mapping Records and Licences to current HarvestingState for repo: {}", repository.getHarvestingUrl());
+            mapRecordsToLicences(records, licences);
 
             //state.setOaiSets(oaiSets);
         }
@@ -122,6 +129,25 @@ public class HarvestingDataModel {
         }
     }
 
+    private void mapRecordsToLicences(List<Record> records, List<Licence> licences) {
+        for(Record record: records) {
+            Licence mappedLicence = null;
+            String licence_str = record.getLicence_str();
+            logger.debug("record: '{}', licence_str: '{}'", record.getIdentifier(), licence_str);
+            for(Licence licence: licences) {
+                if(licence_str.equals(licence.getName())){
+                    mappedLicence = licence;
+                    break;
+                }
+            }
+            if(mappedLicence != null) {
+                record.setLicense(mappedLicence);
+            } else {
+                // TODO: no licence found, how can that happen and what shall we do then?
+            }
+        }
+    }
+
     private List<MetadataFormat> getOrCreateFormats(List<Format> metadataFormatsRaw) throws DataModelException {
         List<MetadataFormat> metadataFormats = new ArrayList<>();
         for (Format mFormat : metadataFormatsRaw) {
@@ -152,6 +178,22 @@ public class HarvestingDataModel {
         return oaiSets;
     }
 
+    private List<Licence> getOrCreateLicences(List<HarvestedRecord> recordsRaw) throws DataModelException {
+        List<Licence> licences = new ArrayList<>();
+        for(HarvestedRecord recordRaw: recordsRaw) {
+            String licence_str = recordRaw.rights;
+            Licence licence = getLicenceObject(licence_str);
+            if(licence != null) {
+                logger.debug("Got Licence from Database - name: '{}', id: {}", licence.getName(), licence.getId());
+            } else if(licence == null) {
+                logger.debug("Creating new Licence with name: '{}'", licence_str);
+                licence = new Licence(licence_str);
+            }
+            licences.add(licence);
+        }
+        return licences;
+    }
+
     // TODO: currently we always need to create new records, there seems to be no way to prevent this, no matter the solution (with a mapping table, there will be a number of new mappings equal the number of records, each time (harvestRun)
 /*    private List<Record> getOrCreateRecords(List<HarvestedRecord> recordsRaw) throws DataModelException {
         List<Record> records = new ArrayList<>();
@@ -175,6 +217,7 @@ public class HarvestingDataModel {
             logger.debug("Creating new Record with identifier: '{}'", recordRaw.identifier);
             Record record = new Record(recordRaw.identifier);
             record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
+            record.setLicence_str(recordRaw.rights); // licence_str from raw record, not managed by Hibernate
             records.add(record);
         }
         return records;
@@ -237,6 +280,35 @@ public class HarvestingDataModel {
         return mf;
     }
 
+	private Licence getLicenceObject(String rights) throws DataModelException {
+		Licence lic = null;
+		Session session = factory.openSession();
+		Transaction tx = null;
+
+		try {
+			tx = session.beginTransaction();
+
+			CriteriaBuilder builder = session.getCriteriaBuilder();
+			CriteriaQuery<Licence> criteria =
+					builder.createQuery(Licence.class);
+
+			Root<Licence> root = criteria.from(Licence.class);
+			criteria.select(root).where(builder.equal(root.get("name"), rights));
+			Query<Licence> q = session.createQuery(criteria);
+			if (!q.getResultList().isEmpty()) {
+				lic = (Licence) q.getResultList().get(0);
+			}
+			tx.commit();
+		} catch (Exception e) {
+			if (tx!=null) tx.rollback();
+			e.printStackTrace();
+			throw new DataModelException(e.getMessage());
+		} finally {
+			session.close();
+		}
+		return lic;
+	}
+
     private Record getRecordObject(String identifier) throws DataModelException {
         Record mf = null;
         Session session = factory.openSession();
@@ -278,6 +350,9 @@ public class HarvestingDataModel {
 
             try {
                 session.save(state);
+
+                // TODO: do not save records (or anything other than a failed state) when 'fallback' is triggered
+                // TODO: change 'fallback' to a special method
                 for(Record record: records) {
                     session.save(record);
                 }

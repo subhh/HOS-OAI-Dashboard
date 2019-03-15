@@ -1,8 +1,5 @@
 package de.hitec.oaidashboard.database.datastructures2;
 
-import de.hitec.oaidashboard.database.datastructures.License;
-import de.hitec.oaidashboard.database.datastructures.State;
-
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -23,9 +20,9 @@ public class Record {
     @Column(name = "identifier")
 	private String identifier;
 
-/*	@ManyToOne(optional = false)
-	@JoinColumn(name="license_id", referencedColumnName="license_id", updatable=false)
-	private License license; */
+	@ManyToOne(optional = false, cascade = CascadeType.ALL)
+	@JoinColumn(name="licence_id", referencedColumnName="licence_id", updatable=false)
+	private Licence licence;
 
 	@ManyToOne(optional = false, cascade = CascadeType.ALL)
 	@JoinColumn(name="state_id", referencedColumnName="state_id", updatable=false)
@@ -40,6 +37,10 @@ public class Record {
     // not managed by Hibernate!
     @Transient
     private List<String> set_specs = new ArrayList<>();
+
+    // not managed by Hibernate!
+	@Transient
+	private String licence_str;
 
 	public Record() {}
 	public Record(String identifier) {
@@ -60,13 +61,13 @@ public class Record {
 
 	public void setIdentifier( String identifier ) { this.identifier = identifier; }
 
-/*	public License getLicense() {
-		return license;
+	public Licence getLicence() {
+		return licence;
 	}
 
-	public void setLicense( License license ) {
-		this.license = license;
-	}*/
+	public void setLicense( Licence licence ) {
+		this.licence = licence;
+	}
 
 	public HarvestingState getState() {
 		return state;
@@ -91,4 +92,12 @@ public class Record {
     public void setSet_specs(List<String> set_specs) {
         this.set_specs = set_specs;
     }
+
+	public String getLicence_str() {
+		return licence_str;
+	}
+
+	public void setLicence_str(String licence_str) {
+		this.licence_str = licence_str;
+	}
 }

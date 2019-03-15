@@ -8,7 +8,7 @@
         <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
         <property name = "hibernate.connection.username">example_db_user</property>
         <property name = "hibernate.connection.password">example_db_pass</property>
-        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db</property>
+        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8</property>
 
         <!--<property name = "hibernate.show_sql">true</property>-->
  
@@ -18,6 +18,7 @@
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.OAISet" />
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateSetMapper" />
         <mapping class = "de.hitec.oaidashboard.database.datastructures2.Record" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.Licence" />
 
     </session-factory>
 </hibernate-configuration>

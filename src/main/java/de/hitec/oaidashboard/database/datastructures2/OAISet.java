@@ -4,7 +4,9 @@ import de.hitec.oaidashboard.database.datastructures.State;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -28,6 +30,12 @@ public class OAISet {
 
     @OneToMany(mappedBy = "set", cascade = CascadeType.ALL)
     private Set<StateSetMapper> stateSetMappers = new HashSet<>();
+
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "RECORDSETMAPPER",
+            joinColumns = @JoinColumn(name = "set_id"),
+            inverseJoinColumns = @JoinColumn(name = "record_id"))
+    private List<Record> records = new ArrayList<>();
 
     public OAISet() {}
     public OAISet(String name, String spec) {
@@ -71,5 +79,13 @@ public class OAISet {
 
     public void addStateSetMapper(StateSetMapper stateSetMapper) {
         this.stateSetMappers.add(stateSetMapper);
+    }
+
+    public List<Record> getRecords() {
+        return records;
+    }
+
+    public void setRecords(List<Record> records) {
+        this.records = records;
     }
 }

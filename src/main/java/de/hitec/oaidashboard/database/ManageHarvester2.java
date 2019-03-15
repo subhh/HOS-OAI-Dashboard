@@ -1,6 +1,6 @@
 package de.hitec.oaidashboard.database;
 
-import de.hitec.oaidashboard.database.datastructures2.Repository;
+import de.hitec.oaidashboard.database.datastructures2.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -158,10 +158,10 @@ public class ManageHarvester2 {
 
 	private static void setUpDefaultRepositories() {
 		saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
-		//saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
-		//saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
-		//saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
-		//saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+		saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
+		saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
+		saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
+		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -173,12 +173,40 @@ public class ManageHarvester2 {
 			// First step: MultiThreaded collection of data (Json, XML etc.)
 			Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
 
-			// Second step: SingleThreaded instantiation of Model and saving to Database
+			// TODO: Second step (instantation of model -> data aggregration), then third step = saving to database
+
+			// Third step: SingleThreaded instantiation of Model and saving to Database
 			instantiateAndSaveModels(repoHarvesterMap);
 
 			logger.info("Finished.");
 		}
 	}
+
+/*	public static void main(String[] args) throws IOException {
+		initDatabase();
+		Session session = factory.openSession();
+		Transaction tx = session.beginTransaction();
+		Object id = null;
+
+		try {
+			HarvestingState test = session.get(HarvestingState.class, new Long(1));
+			for(MetadataFormat metadataFormat: test.getMetadataFormats()) {
+				logger.info("metadataformat prefix: {}", metadataFormat.getFormatPrefix());
+			}
+			for(StateSetMapper stateSetMapper: test.getStateSetMappers()) {
+				OAISet oaiSet = stateSetMapper.getSet();
+				logger.info("OAISet name: {}", oaiSet.getName());
+				logger.info(oaiSet.getRecords().size());
+			}
+
+			tx.commit();
+		} catch (Exception e) {
+			if (tx != null) tx.rollback();
+			logger.info("Exception while creating DataModel for repo",  e);
+		} finally {
+			session.close();
+		}
+	}*/
 
 	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories) {
     	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();

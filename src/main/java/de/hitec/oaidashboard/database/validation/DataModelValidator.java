@@ -1,6 +1,7 @@
 package de.hitec.oaidashboard.database.validation;
 
-import de.hitec.oaidashboard.database.datastructures2.OAISet;
+import de.hitec.oaidashboard.database.datastructures2.LicenceCount;
+import de.hitec.oaidashboard.database.datastructures2.SetCount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -19,21 +20,52 @@ public class DataModelValidator {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public static boolean isValidOAISet(OAISet oaiSet) {
-        return validateOAISetAgainstHibernate(oaiSet);
+    public static boolean isValidLicenceCount(LicenceCount licenceCount) {
+        return validateLicenceCountAgainstHibernate(licenceCount);
     }
 
-    private static boolean validateOAISetAgainstHibernate(OAISet oaiSet) {
+
+    public static boolean isValidSetCount(SetCount setCount) {
+        return validateSetCountAgainstHibernate(setCount);
+    }
+
+    private static boolean validateLicenceCountAgainstHibernate(LicenceCount licenceCount) {
         boolean isValid = false;
 
         Validator validator = Validation
                 .buildDefaultValidatorFactory()
                 .getValidator();
-        Set<ConstraintViolation<OAISet>> constraintViolations = validator.validate(oaiSet);
+        Set<ConstraintViolation<LicenceCount>> constraintViolations = validator.validate(licenceCount);
         if(constraintViolations.size() == 0){
             isValid = true;
         } else {
-            logger.info("Invalid OAISet found with name: '{}' and spec: '{}'", oaiSet.getName(), oaiSet.getSpec());
+            logger.info("Invalid LicenceCount found with licence_name: '{}' " +
+                    ", licence_type: '{}' and record_count: {}",
+                    licenceCount.getLicence_name(), licenceCount.getLicence_type(), licenceCount.getRecord_count());
+            for(ConstraintViolation<?> violation: constraintViolations) {
+                logger.info("ContraintViolation - propertyPath: '{}', message: '{}', invalidValue: '{}'",
+                        violation.getPropertyPath(),
+                        violation.getMessage(),
+                        violation.getInvalidValue());
+            }
+        }
+
+        return isValid;
+    }
+
+    private static boolean validateSetCountAgainstHibernate(SetCount setCount) {
+        boolean isValid = false;
+
+        Validator validator = Validation
+                .buildDefaultValidatorFactory()
+                .getValidator();
+        Set<ConstraintViolation<SetCount>> constraintViolations = validator.validate(setCount);
+        if(constraintViolations.size() == 0){
+            isValid = true;
+        } else {
+            logger.info("Invalid SetCount found with set_name: '{}', set_spec: '{}'" +
+                            " and record_count: {}",
+                    setCount.getSet_name(), setCount.getSet_spec(), setCount.getRecord_count());
             for(ConstraintViolation<?> violation: constraintViolations) {
                 logger.info("ContraintViolation - propertyPath: '{}', message: '{}', invalidValue: '{}'",
                         violation.getPropertyPath(),

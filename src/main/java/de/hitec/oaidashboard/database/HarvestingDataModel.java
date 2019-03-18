@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class HarvestingDataModel {
 
@@ -30,8 +31,8 @@ public class HarvestingDataModel {
 
     private HarvestingState state = null;
 
-    private List<Record> records = null; // records may not be empty -> do not instantiate empty list
-    List<OAISet> oaiSets = new ArrayList<>(); // oaiSets may be empty
+    private List<HarvestedRecord> harvestedRecords = null; // records may not be empty -> do not instantiate empty list
+    Set<SetCount> setCounts = new HashSet<>(); // SetCounts may be empty
 
     private static Logger logger = LogManager.getRootLogger();
 
@@ -41,27 +42,30 @@ public class HarvestingDataModel {
         this.dataHarvester = dataHarvester;
         this.factory = factory;
 
+        this.harvestedRecords = dataHarvester.getRecords();
+
         initDataModel();
     }
 
     private void initDataModel() {
 
-        List<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
-        List<Licence> licences = null; // licences may be not be empty -> do not instantiate empty list
+        Set<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
+        Set<LicenceCount> licenceCounts = null; // licenceCounts may be not be empty -> do not instantiate empty list
+
+        // create state SUCCESS and connect all data
+        state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "SUCCESS");
 
         // convert all Data (raw) to Java/Hibernate-DataModel
         try {
-            logger.info("Getting MetadaFormats (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
-            metadataFormats = getOrCreateFormats(dataHarvester.getMetadataFormats());
 
-            logger.info("Getting OAISets (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
-            oaiSets = getOrCreateOAISets(dataHarvester.getSets());
+            logger.info("Creating LicenceCounts (JavaModel) for repo: {}", repository.getHarvestingUrl());
+            licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
 
-            logger.info("Getting Records (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
-            records = createRecords(dataHarvester.getRecords());
+            logger.info("Creating SetCounts (JavaModel) for repo: {}", repository.getHarvestingUrl());
+            setCounts = createSetCounts(dataHarvester.getSets(), state);
 
-            logger.info("Getting Licences (JavaModel) from Database or creating new for repo: {}", repository.getHarvestingUrl());
-            licences = getOrCreateLicences(dataHarvester.getRecords());
+            logger.info("Creating MetadaFormats (JavaModel) for repo: {}", repository.getHarvestingUrl());
+            metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
 
         } catch (DataModelException dataModelException) {
             dataModelException.printStackTrace();
@@ -71,9 +75,13 @@ public class HarvestingDataModel {
             // TODO: create a FAILED empty state instead of SUCCESS
         }
 
-        // create state SUCCESS and connect all data
-        state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "SUCCESS");
+        //logger.info("Mapping Licences to current HarvestingState for repo: {}", repository.getHarvestingUrl());
 
+        state.setLicenceCounts(licenceCounts);
+        state.setSetCounts(setCounts);
+        state.setMetadataFormats(metadataFormats);
+
+/*
         if(metadataFormats != null && records != null) {
             logger.info("Adding MetadataFormats to current HarvestingState for repo: {}", repository.getHarvestingUrl());
             state.setMetadataFormats(metadataFormats);
@@ -96,259 +104,42 @@ public class HarvestingDataModel {
             logger.info("Mapping Licences to State for current HarvestingState for repo: {}", repository.getHarvestingUrl());
             mapStateToLicences(state, licences);
         }
+*/
     }
 
-    private void mapStateToLicences(HarvestingState state, List<Licence> licences) {
-        Set<StateLicenceMapper> stateLicenseMappers = new HashSet<>();
-        for(Licence licence: licences) {
-            StateLicenceMapper stateLicenseMapper = new StateLicenceMapper(state, licence);
-            stateLicenseMappers.add(stateLicenseMapper);
-        }
-        state.setStateLicenceMappers(stateLicenseMappers);
+    private Set<LicenceCount> createLicenceCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) throws DataModelException {
+        Set<String> licences_raw = recordsRaw.stream().
+                map(harvestedRecord -> harvestedRecord.rights).
+                collect(Collectors.toSet());
+
+        Set<LicenceCount> licenceCounts = licences_raw.stream().
+                map(licence_raw -> new LicenceCount(licence_raw, state)).
+                peek(licenceCount -> logger.debug("Creating new LicenceCount with name: '{}'", licenceCount.getLicence_name())).
+                collect(Collectors.toSet());
+
+        logger.debug("Created {} LicenceCounts!", licenceCounts.size());
+        return licenceCounts;
     }
 
-    private void mapStateToSets(HarvestingState state, List<OAISet> oaiSets) {
-        Set<StateSetMapper> stateSetMappers = new HashSet<>();
-        for(OAISet oaiSet: oaiSets) {
-            StateSetMapper stateSetMapper = new StateSetMapper(state, oaiSet); // reuse of StateSetMapper from Database makes no sense
-            stateSetMappers.add(stateSetMapper);
+    private Set<SetCount> createSetCounts(List<MethaSet> setsRaw, HarvestingState state) {
+        Set<SetCount> setCounts = new HashSet<>();
+        for(MethaSet setRaw: setsRaw) {
+            logger.debug("Creating new SetCount with set_name: '{}' and set_spec: '{}'", setRaw.setName, setRaw.setSpec);
+            setCounts.add(new SetCount(setRaw.setName, setRaw.setSpec, state));
         }
-        state.setStateSetMappers(stateSetMappers);
+        logger.debug("Created {} SetCounts!", setCounts.size());
+        return setCounts;
     }
 
-    private void mapRecordsToState(HarvestingState state, List<Record> records) {
-        for(Record record: records) {
-            record.setState(state);
+    private Set<MetadataFormat> createMetadataFormats(List<Format> formatsRaw, HarvestingState state) {
+        Set<MetadataFormat> metadataFormats = new HashSet<>();
+        for(Format formatRaw: formatsRaw) {
+            logger.info("Creating new MetadataFormat with prefix: '{}', schema: {} and " +
+                    "namespace: '{}'", formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace);
+            metadataFormats.add(new MetadataFormat(formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace, state));
         }
-    }
-
-    private void mapRecordsToSets(List<Record> records, List<OAISet> oaiSets) {
-        for(Record record: records) {
-            List<OAISet> mappedSets = new ArrayList<>();
-            List<String> set_specs = record.getSet_specs();
-            for(OAISet oaiSet: oaiSets) {
-                for(String set_spec: set_specs) {
-                    if (set_spec.equals(oaiSet.getSpec())) {
-                        mappedSets.add(oaiSet);
-                    }
-                }
-            }
-            record.setOaiSets(mappedSets);
-        }
-    }
-
-    private void mapRecordsToLicences(List<Record> records, List<Licence> licences) {
-        for(Record record: records) {
-            Licence mappedLicence = null;
-            String licence_str = record.getLicence_str_transient();
-            logger.debug("record: '{}', licence_str: '{}'", record.getIdentifier(), licence_str);
-            for(Licence licence: licences) {
-                if(licence_str.equals(licence.getName())){
-                    mappedLicence = licence;
-                    break;
-                }
-            }
-            if(mappedLicence != null) {
-                record.setLicense(mappedLicence);
-            } else {
-                // TODO: no licence found, how can that happen and what shall we do then?
-            }
-        }
-    }
-
-    private List<MetadataFormat> getOrCreateFormats(List<Format> metadataFormatsRaw) throws DataModelException {
-        List<MetadataFormat> metadataFormats = new ArrayList<>();
-        for (Format mFormat : metadataFormatsRaw) {
-            MetadataFormat mf = getMFormatObject(mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
-            if(mf != null) {
-                logger.debug("Got MetadataFormat from Database - name: {} id: {}", mf.getFormatPrefix(), mf.getMetadataformat_id());
-            } else if (mf == null) {
-                logger.debug("Creating new MetadataFormat with prefix: {}", mFormat.metadataPrefix);
-                mf = new MetadataFormat(mFormat.metadataPrefix, mFormat.schema, mFormat.metadataNamespace);
-                logger.info("ID TEST: {}", mf.getMetadataformat_id());
-            }
-            metadataFormats.add(mf);
-        }
+        logger.info("Created {} MetadataFormats!", metadataFormats.size());
         return metadataFormats;
-    }
-
-    private List<OAISet> getOrCreateOAISets(List<MethaSet> setsRaw) throws DataModelException {
-        List<OAISet> oaiSets = new ArrayList<>();
-        for (MethaSet set : setsRaw) {
-            OAISet oaiSet = getSetObject(set.setName, set.setSpec);
-            if(oaiSet != null) {
-                logger.debug("Got OAISet from Database - name: '{}', spec: '{}', id: {}", oaiSet.getName(), oaiSet.getSpec(), oaiSet.getId());
-            } else if (oaiSet == null) {
-                logger.debug("Creating new OAISet with name: '{}' and spec: '{}'", set.setName, set.setSpec);
-                oaiSet = new OAISet(set.setName, set.setSpec);
-            }
-            oaiSets.add(oaiSet);
-        }
-        return oaiSets;
-    }
-
-    private List<Licence> getOrCreateLicences(List<HarvestedRecord> recordsRaw) throws DataModelException {
-        List<Licence> licences = new ArrayList<>();
-        Set<String> licencesRaw = new HashSet<>();
-        for(HarvestedRecord recordRaw: recordsRaw) {
-            String licence_str = recordRaw.rights;
-            licencesRaw.add(licence_str);
-        }
-        for(String licenceRaw: licencesRaw) {
-            Licence licence = getLicenceObject(licenceRaw);
-            if(licence != null) {
-                logger.debug("Got Licence from Database - name: '{}', id: {}", licence.getName(), licence.getId());
-            } else if(licence == null) {
-                logger.debug("Creating new Licence with name: '{}'", licenceRaw);
-                licence = new Licence(licenceRaw);
-            }
-            licences.add(licence);
-        }
-        logger.debug("Got {} Licences!", licences.size());
-        return licences;
-    }
-
-    // TODO: currently we always need to create new records, there seems to be no way to prevent this, no matter the solution (with a mapping table, there will be a number of new mappings equal the number of records, each time (harvestRun)
-/*    private List<Record> getOrCreateRecords(List<HarvestedRecord> recordsRaw) throws DataModelException {
-        List<Record> records = new ArrayList<>();
-        for (HarvestedRecord recordRaw : recordsRaw) {
-            Record record = getRecordObject(recordRaw.identifier);
-            if(record != null) {
-                logger.info("Got Record from Database - identifier: '{}'", record.getIdentifier());
-            } else if (record == null) {
-                logger.info("Creating new Record with identifier: '{}'", recordRaw.identifier);
-                record = new Record(recordRaw.identifier);
-            }
-            record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
-            records.add(record);
-        }
-        return records;
-    }*/
-
-    private List<Record> createRecords(List<HarvestedRecord> recordsRaw) throws DataModelException {
-        List<Record> records = new ArrayList<>();
-        for (HarvestedRecord recordRaw : recordsRaw) {
-            logger.debug("Creating new Record with identifier: '{}'", recordRaw.identifier);
-            Record record = new Record(recordRaw.identifier);
-            record.setSet_specs(recordRaw.specList); // set spec list from raw record, not managed by Hibernate
-            record.setLicence_str_transient(recordRaw.rights); // licence_str from raw record, not managed by Hibernate
-            records.add(record);
-        }
-        return records;
-    }
-
-
-    private OAISet getSetObject(String name, String spec) throws DataModelException {
-        OAISet oaiSet = null;
-        Session session = factory.openSession();
-        Transaction tx = null;
-        try {
-            tx = session.beginTransaction();
-
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<OAISet> criteria = builder.createQuery(OAISet.class);
-
-            Root<OAISet> root = criteria.from(OAISet.class);
-            criteria.select(root).where(builder.equal(root.get("spec"), spec));
-
-            Query<OAISet> q = session.createQuery(criteria);
-            if (!q.getResultList().isEmpty()) {
-                oaiSet = (OAISet) q.uniqueResult();
-            }
-            tx.commit();
-        } catch (Exception e) {
-            if (tx!=null) tx.rollback();
-            e.printStackTrace();
-            throw new DataModelException(e.getMessage());
-        } finally {
-            session.close();
-        }
-        return oaiSet;
-    }
-
-    private MetadataFormat getMFormatObject(String prefix, String schema, String ns) throws DataModelException {
-        MetadataFormat mf = null;
-        Session session = factory.openSession();
-        Transaction tx = null;
-        try {
-            tx = session.beginTransaction();
-
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<MetadataFormat> criteria = builder.createQuery(MetadataFormat.class);
-
-            Root<MetadataFormat> root = criteria.from(MetadataFormat.class);
-            criteria.select(root).where(builder.equal(root.get("formatPrefix"), prefix));
-
-            Query<MetadataFormat> q = session.createQuery(criteria);
-            if (!q.getResultList().isEmpty()) {
-                mf = (MetadataFormat) q.uniqueResult();
-            }
-            tx.commit();
-        } catch (Exception e) {
-            if (tx!=null) tx.rollback();
-            e.printStackTrace();
-            throw new DataModelException(e.getMessage());
-        } finally {
-            session.close();
-        }
-        return mf;
-    }
-
-	private Licence getLicenceObject(String rights) throws DataModelException {
-		Licence lic = null;
-		Session session = factory.openSession();
-		Transaction tx = null;
-
-		try {
-			tx = session.beginTransaction();
-
-			CriteriaBuilder builder = session.getCriteriaBuilder();
-			CriteriaQuery<Licence> criteria =
-					builder.createQuery(Licence.class);
-
-			Root<Licence> root = criteria.from(Licence.class);
-			criteria.select(root).where(builder.equal(root.get("name"), rights));
-			Query<Licence> q = session.createQuery(criteria);
-			if (!q.getResultList().isEmpty()) {
-				lic = (Licence) q.getResultList().get(0);
-			}
-			tx.commit();
-		} catch (Exception e) {
-			if (tx!=null) tx.rollback();
-			e.printStackTrace();
-			throw new DataModelException(e.getMessage());
-		} finally {
-			session.close();
-		}
-		return lic;
-	}
-
-    private Record getRecordObject(String identifier) throws DataModelException {
-        Record mf = null;
-        Session session = factory.openSession();
-        Transaction tx = null;
-        try {
-            tx = session.beginTransaction();
-
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<Record> criteria = builder.createQuery(Record.class);
-
-            Root<Record> root = criteria.from(Record.class);
-            criteria.select(root).where(builder.equal(root.get("identifier"), identifier));
-
-            Query<Record> q = session.createQuery(criteria);
-            if (!q.getResultList().isEmpty()) {
-                mf = (Record) q.uniqueResult();
-            }
-            tx.commit();
-        } catch (Exception e) {
-            if (tx!=null) tx.rollback();
-            e.printStackTrace();
-            throw new DataModelException(e.getMessage());
-        } finally {
-            session.close();
-        }
-        return mf;
     }
 
     public void saveDataModel() {
@@ -364,16 +155,11 @@ public class HarvestingDataModel {
 
             try {
                 session.save(state);
-
-                // TODO: do not save records (or anything other than a failed state) when 'fallback' is triggered
-                // TODO: change 'fallback' to a special method
-                for(Record record: records) {
-                    session.save(record);
-                }
                 tx.commit();
             } catch (Exception e) {
                 if (tx != null) tx.rollback();
                 logger.info("Exception while creating DataModel for repo: {}", repository.getHarvestingUrl(), e);
+                // TODO: Rework fallback-logic!
                 if(!fallback) {
                     createFailedState();
                     session.close();
@@ -402,11 +188,21 @@ public class HarvestingDataModel {
         return this.state;
     }
 
-    public List<Record> getRecords() {
-        return this.records;
+    public List<HarvestedRecord> getHarvestedRecords() {
+        return this.harvestedRecords;
     }
 
-    public List<OAISet> getOaiSets() {
-        return this.oaiSets;
+    public Set<SetCount> getSetCounts() {
+        return this.setCounts;
+    }
+
+    public void validate() {
+        logger.info("Validating DataModel against Hibernate annotations: {}", repository.getHarvestingUrl());
+        for(LicenceCount licenceCount: state.getLicenceCounts()) {
+            DataModelValidator.isValidLicenceCount(licenceCount);
+        }
+        for(SetCount setCount: state.getSetCounts()) {
+            DataModelValidator.isValidSetCount(setCount);
+        }
     }
 }

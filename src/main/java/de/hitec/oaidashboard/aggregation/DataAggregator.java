@@ -2,12 +2,16 @@ package de.hitec.oaidashboard.aggregation;
 
 import de.hitec.oaidashboard.database.HarvestingDataModel;
 import de.hitec.oaidashboard.database.datastructures2.*;
+import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static java.lang.Math.toIntExact;
 
 public class DataAggregator {
 
@@ -23,47 +27,49 @@ public class DataAggregator {
     private void countEntities() {
         countRecords();
         countRecordsForLicences();
-        //countRecordsForSets();
+        countRecordsForSets();
     }
 
     private void countRecords() {
         HarvestingState state = dataModel.getState();
-        List<Record> records = dataModel.getRecords();
-        state.setRecordCount(records.size());
-    }
-
-
-    private void countRecordsForLicences() {
-        HarvestingState state = dataModel.getState();
-        List<Record> records = dataModel.getRecords();
-        Map<Licence, Integer> licenceIDtoRecordcountMap = new HashMap<>();
-        for(Record record: records) {
-            Licence licenceFromRecord = record.getLicence();
-            int count = licenceIDtoRecordcountMap.containsKey(licenceFromRecord) ? licenceIDtoRecordcountMap.get(licenceFromRecord) : 0;
-            licenceIDtoRecordcountMap.put(licenceFromRecord, count + 1);
-        }
-        for(StateLicenceMapper stateLicenceMapper: state.getStateLicenceMappers()) {
-            if(licenceIDtoRecordcountMap.containsKey(stateLicenceMapper.getLicence())) {
-                stateLicenceMapper.setRecordCount(licenceIDtoRecordcountMap.get(stateLicenceMapper.getLicence()));
-            }
-        }
+        List<HarvestedRecord> harvestedRecords = dataModel.getHarvestedRecords();
+        state.setRecord_count(harvestedRecords.size());
     }
 
     private void countRecordsForSets() {
-        HarvestingState state = dataModel.getState();
-        List<Record> records = dataModel.getRecords();
+        Map<String, Long> countMap = countStrings(dataModel.getHarvestedRecords().stream().
+                map(harvestedRecord -> harvestedRecord.specList).
+                flatMap(Collection::stream).
+                collect(Collectors.toList()));
 
-        Map<OAISet, Integer> oaiSetToRecordcountMap = new HashMap<>();
-        for(Record record: records) {
-            for(OAISet oaiSet: record.getOaiSets()) {
-                int count = oaiSetToRecordcountMap.containsKey(oaiSet) ? oaiSetToRecordcountMap.get(oaiSet) : 0;
-                oaiSetToRecordcountMap.put(oaiSet, count + 1);
+        for (SetCount setCount: dataModel.getState().getSetCounts()) {
+            if (countMap.containsKey(setCount.getSet_spec())) {
+                setCount.setRecord_count(toIntExact(countMap.get(setCount.getSet_spec())));
             }
         }
-        for(StateSetMapper stateSetMapper: state.getStateSetMappers()) {
-            if(oaiSetToRecordcountMap.containsKey(stateSetMapper.getSet())) {
-                stateSetMapper.setRecordCount(oaiSetToRecordcountMap.get(stateSetMapper.getSet()));
+    }
+
+    private void countRecordsForLicences() {
+        Map<String, Long> countMap = countStrings(dataModel.getHarvestedRecords().stream().
+                map(harvestedRecord -> harvestedRecord.rights).
+                collect(Collectors.toList()));
+
+        for (LicenceCount licenceCount : dataModel.getState().getLicenceCounts()) {
+            if (countMap.containsKey(licenceCount.getLicence_name())) {
+                licenceCount.setRecord_count(toIntExact(countMap.get(licenceCount.getLicence_name())));
             }
         }
+    }
+
+    private Map<String, Long> countStrings(List<String> strings) {
+        //Map<String, Integer> countMap = new HashMap<>();
+
+        return strings.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+
+        /*for(String s: strings) {
+            int count = countMap.containsKey(s) ? countMap.get(s) : 0;
+            countMap.put(s, count + 1);
+        }
+        return countMap;*/
     }
 }

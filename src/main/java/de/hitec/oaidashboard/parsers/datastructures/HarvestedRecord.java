@@ -8,8 +8,7 @@ public class HarvestedRecord {
     public String dateStamp;
     public String identifier;
 
-    public HarvestedRecord()
-    {
+    public HarvestedRecord() {
     	specList = new ArrayList<String>();
     	rights   = "NO_RIGHTS";
     	dateStamp = "";

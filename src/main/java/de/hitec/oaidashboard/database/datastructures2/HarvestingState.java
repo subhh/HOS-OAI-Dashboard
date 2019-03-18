@@ -1,9 +1,8 @@
 package de.hitec.oaidashboard.database.datastructures2;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -14,13 +13,12 @@ public class HarvestingState {
 
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    @Column(name = "state_id")
-	private long id;
+	private long state_id;
 
-    @Column(name = "record_count", nullable = false)
-	private long recordCount;
+    @NotNull
+	private long record_count;
 
-    @Column(name = "timestamp", nullable = false)
+    @NotNull
 	private Timestamp timestamp;
 
     @Column(name = "record_count_fulltext")
@@ -51,20 +49,16 @@ public class HarvestingState {
     @Column(name = "error_message", length = 300)
     private String errorMessage;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "STATEFORMATMAPPER",
-            joinColumns = @JoinColumn(name = "state_id"),
-            inverseJoinColumns = @JoinColumn(name = "metadataformat_id"))
-    //@ElementCollection(targetClass = MetadataFormat.class)
-	private List<MetadataFormat> metadataFormats = new ArrayList<>();
+    @OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+    private Set<LicenceCount> licenceCounts;
 
-	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
-	private Set<StateSetMapper> stateSetMappers;
+    @OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+    private Set<SetCount> setCounts;
 
-	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
-	private Set<StateLicenceMapper> stateLicenceMappers;
+    @OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+    private Set<MetadataFormat> metadataFormats;
 
-	public HarvestingState() {}
+    public HarvestingState() {}
 	public HarvestingState(Timestamp timestamp, Repository repo, String status) {
 		this.timestamp = timestamp;
 		this.repository = repo;
@@ -72,22 +66,22 @@ public class HarvestingState {
 	}
 
 	public long getId() {
-		return id;
+		return state_id;
 	}
 
 	// Hibernate insists on having a setter method,
 	// but the id is chosen by the database.
-	private void setId(long id) {
-		this.id = id;
+	private void setId(long state_id) {
+		this.state_id = state_id;
 	}
 
 
-	public long getRecordCount() {
-		return recordCount;
+	public long getRecord_count() {
+		return record_count;
 	}
 
-	public void setRecordCount( long rc ) {
-		this.recordCount = rc;
+	public void setRecord_count( long rc ) {
+		this.record_count = rc;
 	}
 
 	public Timestamp getTimestamp() {
@@ -170,31 +164,27 @@ public class HarvestingState {
 		this.repository = repo;
 	}
 
-    public List<MetadataFormat> getMetadataFormats() {
+	public Set<LicenceCount> getLicenceCounts() {
+		return licenceCounts;
+	}
+
+	public void setLicenceCounts(Set<LicenceCount> licenceCounts) {
+		this.licenceCounts = licenceCounts;
+	}
+
+    public Set<SetCount> getSetCounts() {
+        return setCounts;
+    }
+
+    public void setSetCounts(Set<SetCount> setCounts) {
+        this.setCounts = setCounts;
+    }
+
+    public Set<MetadataFormat> getMetadataFormats() {
         return metadataFormats;
     }
 
-    public void setMetadataFormats(List<MetadataFormat> metadataFormats) {
+    public void setMetadataFormats(Set<MetadataFormat> metadataFormats) {
         this.metadataFormats = metadataFormats;
     }
-
-    public void addMetadataFormat(MetadataFormat metadataFormat){
-	    this.getMetadataFormats().add(metadataFormat);
-    }
-
-	public Set<StateSetMapper> getStateSetMappers() {
-		return stateSetMappers;
-	}
-
-	public void setStateSetMappers(Set<StateSetMapper> stateSetMappers) {
-		this.stateSetMappers = stateSetMappers;
-	}
-
-	public Set<StateLicenceMapper> getStateLicenceMappers() {
-		return stateLicenceMappers;
-	}
-
-	public void setStateLicenceMappers(Set<StateLicenceMapper> stateLicenceMappers) {
-		this.stateLicenceMappers = stateLicenceMappers;
-	}
 }

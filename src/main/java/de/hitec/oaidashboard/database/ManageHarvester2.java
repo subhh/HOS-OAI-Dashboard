@@ -185,6 +185,8 @@ public class ManageHarvester2 {
 				// Third Step: data aggregation (counting records, licences etc., mapping licences and more)
 				DataAggregator dataAggregator = new DataAggregator(harvestingDataModel);
 
+				harvestingDataModel.validate();
+
 				// Fourth Step: Saving model to Database
 				/**
 				 * IMPORTANT: the saving operation should always be done directly after instantiating a new HarvestingDataModel-Object
@@ -198,7 +200,7 @@ public class ManageHarvester2 {
 		logger.info("Finished.");
 	}
 
-/*	public static void main(String[] args) throws IOException {
+	public static void main2(String[] args) throws IOException {
 		initDatabase();
 		Session session = factory.openSession();
 		Transaction tx = session.beginTransaction();
@@ -206,15 +208,9 @@ public class ManageHarvester2 {
 
 		try {
 			HarvestingState test = session.get(HarvestingState.class, new Long(1));
-			for(MetadataFormat metadataFormat: test.getMetadataFormats()) {
-				logger.info("metadataformat prefix: {}", metadataFormat.getFormatPrefix());
+			for(LicenceCount licenceCount: test.getLicenceCounts()) {
+				logger.info("LicenceCount licence_name: {}, record_count: {}", licenceCount.getLicence_name(), licenceCount.getRecord_count());
 			}
-			for(StateSetMapper stateSetMapper: test.getStateSetMappers()) {
-				OAISet oaiSet = stateSetMapper.getSet();
-				logger.info("OAISet name: {}", oaiSet.getName());
-				logger.info(oaiSet.getRecords().size());
-			}
-
 			tx.commit();
 		} catch (Exception e) {
 			if (tx != null) tx.rollback();
@@ -222,7 +218,7 @@ public class ManageHarvester2 {
 		} finally {
 			session.close();
 		}
-	}*/
+	}
 
 	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories) {
     	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();

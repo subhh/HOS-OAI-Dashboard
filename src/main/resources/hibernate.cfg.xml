@@ -14,12 +14,9 @@
  
  		<mapping class = "de.hitec.oaidashboard.database.datastructures2.Repository" />
  		<mapping class = "de.hitec.oaidashboard.database.datastructures2.HarvestingState" />
- 		<mapping class = "de.hitec.oaidashboard.database.datastructures2.MetadataFormat" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.OAISet" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateSetMapper" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.Record" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.Licence" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.StateLicenceMapper" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.LicenceCount" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.SetCount" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures2.MetadataFormat" />
 
     </session-factory>
 </hibernate-configuration>

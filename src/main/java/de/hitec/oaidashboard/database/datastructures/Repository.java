@@ -9,6 +9,9 @@ import java.sql.Timestamp;
 @Table(name = "REPOSITORY",
    uniqueConstraints = { @UniqueConstraint(columnNames = { "repository_id" }) })
 
+@NamedQueries({
+        @NamedQuery(name="get_active_repositories", query="from Repository where state='ACTIVE'"),
+})
 public class Repository {
 
 	@Id

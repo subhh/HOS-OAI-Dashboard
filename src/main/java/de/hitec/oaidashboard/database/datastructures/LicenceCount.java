@@ -1,5 +1,8 @@
 package de.hitec.oaidashboard.database.datastructures;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -26,6 +29,7 @@ public class LicenceCount {
     @NotNull
     private Integer record_count;
 
+    @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "state_id")
     private HarvestingState state;

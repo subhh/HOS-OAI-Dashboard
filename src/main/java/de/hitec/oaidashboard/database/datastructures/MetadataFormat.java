@@ -1,5 +1,7 @@
 package de.hitec.oaidashboard.database.datastructures;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -26,6 +28,7 @@ public class MetadataFormat {
 	@Size(max=200)
 	private String namespace;
 
+    @JsonIgnore
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "state_id")
     private HarvestingState state;

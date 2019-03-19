@@ -1,5 +1,7 @@
 package de.hitec.oaidashboard.database.datastructures;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -10,6 +12,11 @@ import java.util.Set;
 @Table(name = "HARVESTINGSTATE",
    uniqueConstraints = { @UniqueConstraint(columnNames = { "state_id" }) })
 
+@NamedQueries({
+        @NamedQuery(name="get_state_at_timepoint", query="from HarvestingState where repository_id = :repo_id " +
+                "AND timestamp >= :timepoint1 " +
+                "AND timestamp < :timepoint2"),
+})
 public class HarvestingState {
 
     @Id
@@ -61,6 +68,16 @@ public class HarvestingState {
 		this.status = status;
 	}
 
+    /**
+     * Fixes the Lazy-Initialization-Problem: "org.hibernate.LazyInitializationException: failed to lazily initialize a collection of role"
+     * Call after getting a HarvestingState from Database, while still in session.
+     */
+	public void fixLazyInitialization() {
+        getLicenceCounts().size();
+        getSetCounts().size();
+        getMetadataFormats().size();
+    }
+
 	public long getId() {
 		return state_id;
 	}
@@ -70,7 +87,6 @@ public class HarvestingState {
 	private void setId(long state_id) {
 		this.state_id = state_id;
 	}
-
 
 	public long getRecord_count() {
 		return record_count;

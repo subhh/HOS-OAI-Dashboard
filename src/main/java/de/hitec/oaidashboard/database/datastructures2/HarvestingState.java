@@ -144,7 +144,7 @@ public class HarvestingState {
 		return endTime;
 	}
 
-	public void setendTime( Timestamp end ) {
+	public void setEndTime(Timestamp end ) {
 		this.endTime = end;
 	}
 

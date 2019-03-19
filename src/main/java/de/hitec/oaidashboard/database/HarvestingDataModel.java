@@ -10,14 +10,10 @@ import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
-import org.hibernate.query.Query;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Root;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -154,6 +150,7 @@ public class HarvestingDataModel {
             Object id = null;
 
             try {
+                setStartAndEndtimeOfState();
                 session.save(state);
                 tx.commit();
             } catch (Exception e) {
@@ -182,6 +179,11 @@ public class HarvestingDataModel {
 
     private void createFailedState() {
         state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "FAILURE");
+    }
+
+    private void setStartAndEndtimeOfState() {
+        state.setstartTime(dataHarvester.getStartTime());
+        state.setEndTime(new Timestamp(Calendar.getInstance().getTime().getTime()));
     }
 
     public HarvestingState getState() {

@@ -13,6 +13,7 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -35,6 +36,8 @@ public class DataHarvester extends Thread {
     private List<Format> metadataFormats;
     private List<MethaSet> sets;
     private List<HarvestedRecord> records;
+
+    private Timestamp startTime;
 
     public Thread t;
 
@@ -59,6 +62,9 @@ public class DataHarvester extends Thread {
     }
 
     public void run() {
+        // Set StartTime (will be used as StartTime for HarvestingState)
+        this.startTime = new Timestamp(Calendar.getInstance().getTime().getTime());
+
         try {
             MethaIdStructure instance = getMetaIdAnswer();
             if(instance != null) {
@@ -158,7 +164,7 @@ public class DataHarvester extends Thread {
 
             // TODO: where to set start end endtime of state
             //calendar = Calendar.getInstance();
-            //state.setendTime(new java.sql.Timestamp(
+            //state.setEndTime(new java.sql.Timestamp(
             //        calendar.getTime().getTime()));
 
             XmlParser xmlparser = new XmlParser();
@@ -222,5 +228,9 @@ public class DataHarvester extends Thread {
 
     public String getHarvestingURL() {
         return harvestingURL;
+    }
+
+    public Timestamp getStartTime() {
+        return startTime;
     }
 }

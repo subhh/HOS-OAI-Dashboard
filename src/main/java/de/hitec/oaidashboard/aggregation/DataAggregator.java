@@ -86,13 +86,13 @@ public class DataAggregator {
             }
         }
     }
-    
+
     private void countOARecords() {
         Set<LicenceCount> licenceCounts = dataModel.getState().getLicenceCounts();
         Map<Enum, Integer> licenceTypeCount = licenceCounts.stream().collect(
                 Collectors.groupingBy(LicenceCount::getLicence_type, Collectors.summingInt(LicenceCount::getRecord_count)));
         logger.debug(licenceTypeCount);
-        long oaCount = licenceTypeCount.get(LicenceType.OPEN);
+        long oaCount = licenceTypeCount.getOrDefault(LicenceType.OPEN, 0);
         logger.info("Found {} Licences that are OPEN", oaCount);
         dataModel.getState().setRecordCountOA(oaCount);
     }

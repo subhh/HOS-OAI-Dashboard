@@ -159,10 +159,10 @@ public class ManageHarvester2 {
 
 	private static void setUpDefaultRepositories() {
 		saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
-		//saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
-		//saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
-		//saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
-		//saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+		saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
+		saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
+		saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
+		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
 	}
 
 	public static void main(String[] args) throws IOException {
@@ -172,12 +172,12 @@ public class ManageHarvester2 {
 		if (repositories != null) {
 
 			// First Step: MultiThreaded collection of data (Json, XML etc.)
-			Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
+            Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
 
 			// From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
-			for(Map.Entry entry: repoHarvesterMap.entrySet()) {
-				Repository repository = (Repository) entry.getKey();
-				DataHarvester dataHarvester = (DataHarvester) entry.getValue();
+			for(Map.Entry<Repository, DataHarvester> entry: repoHarvesterMap.entrySet()) {
+				Repository repository = entry.getKey();
+				DataHarvester dataHarvester = entry.getValue();
 
 				// Second Step: instatiation of model
 				HarvestingDataModel harvestingDataModel = new HarvestingDataModel(repository, dataHarvester, factory);
@@ -226,7 +226,6 @@ public class ManageHarvester2 {
 		for(Repository repo : repositories) {
 			DataHarvester dataHarvester = new DataHarvester(repo.getHarvestingUrl(), METHA_ID_PATH, METHA_SYNC_PATH,
 					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
-			//harv.reharvest = REHARVEST;
 			repoHarvesterMap.put(repo, dataHarvester);
 			dataHarvester.start();
 		}
@@ -235,9 +234,7 @@ public class ManageHarvester2 {
 			try	{
 				dataHarvester.t.join();
 				// TODO: if no success: generate failed state and save to DB
-			}
-
-			catch (Exception ex) {
+			} catch (Exception ex) {
 				logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), ex);
 			}
 		}

@@ -246,6 +246,8 @@ public class HarvestingManager {
                     Thread.sleep(100);
                 } catch(Exception e) {
                     logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), e);
+                    unfinishedHarvesters.remove(dataHarvester);
+                    // TODO: save failed state to database
                 }
             }
         }

@@ -68,24 +68,14 @@ public class DataHarvester extends Thread {
             if(instance != null) {
                 this.sets = instance.sets;
                 logger.info("Got {} Sets from Harvesting-URL: {}", sets.size(), harvestingURL);
-                //for (MethaSet methaSet : instance.sets) {
-                //    logger.info("METHASET - setName: '{}', setSpec: '{}', from: '{}'", methaSet.setName, methaSet.setSpec, harvestingURL);
-                //}
 
                 this.metadataFormats = instance.formats;
                 logger.info("Got {} MetadataFormats from Harvesting-URL: {}", metadataFormats.size(), harvestingURL);
-                //for (Format format : instance.formats) {
-                //    logger.info("FORMAT- metadataPrefix: '{}', from: '{}'", format.metadataPrefix, harvestingURL);
-                //}
 
                 logger.info("Starting Metha-Sync for repo: {}", harvestingURL);
                 records = startMethaSync();
                 logger.info("Got {} records for repo: {}" , records.size(), harvestingURL);
                 HarvestedRecord rec = new HarvestedRecord();
-
-
-                //markSomeLicensesAsOpenOrClose();
-                //computeStatistics();
 
                 success = true;
             } else {
@@ -119,9 +109,6 @@ public class DataHarvester extends Thread {
     private List<HarvestedRecord> startMethaSync() {
         List<HarvestedRecord> records = new ArrayList<>();
         try {
-            // TODO: where to set start end endtime of state
-            //Calendar calendar = null;
-
             // metha-id generates a directory name by concatenating the requested 'set' string and '#'
             // and the requested format string (as default) 'oai_dc' and '#' together with the given url.
             // Then, the whole string is base64-encoded.
@@ -137,11 +124,6 @@ public class DataHarvester extends Thread {
 
             ProcessBuilder pb = new ProcessBuilder(metaSyncPath,
                     "-no-intervals", "-base-dir", exportDirectory, harvestingURL);
-
-            // TODO: where to set start end endtime of state
-            //calendar = Calendar.getInstance();
-            //state.setstartTime(new java.sql.Timestamp(
-            //        calendar.getTime().getTime()));
 
             if (reharvest) {
                 logger.info(dir);
@@ -160,53 +142,23 @@ public class DataHarvester extends Thread {
                 }
             }
 
-            // TODO: where to set start end endtime of state
-            //calendar = Calendar.getInstance();
-            //state.setEnd_time(new java.sql.Timestamp(
-            //        calendar.getTime().getTime()));
-
             XmlParser xmlparser = new XmlParser();
 
             // TODO: if no files are havested, is that automatically a failed state?
             //if (dir.listFiles().length == 0) {
             //    state.setStatus("FAILED");
             //}
-
-            Calendar earliestDate = Calendar.getInstance();
-            Calendar latestDate = javax.xml.bind.DatatypeConverter.parseDateTime("1000-01-01T12:00:00Z");
-            boolean dateChanged = false;
+            
             for (File filepath: dir.listFiles()) {
                 if (filepath.getName().endsWith(".xml.gz")) {
                     records.addAll(xmlparser.getRecords(
                             FileSystems.getDefault().getPath(filepath.getCanonicalPath()),
                             FileSystems.getDefault().getPath(gitDirectory)));
-                    for (HarvestedRecord hRecord : records) {
-                        Calendar recordDate = javax.xml.bind.DatatypeConverter.parseDateTime(hRecord.dateStamp);
-                        if (recordDate.after(latestDate)) {
-                            latestDate = recordDate;
-                            dateChanged = true;
-                        }
-                        if (recordDate.before(earliestDate)) {
-                            earliestDate = recordDate;
-                            dateChanged = true;
-                        }
-                        // store License first, if not already stored
-                        //License lic = getLicenseObject(hRecord.rights);
-                        //Object status = null; // returns id if save succeeds
-                        //if (lic == null) {
-                        //    lic = new License(hRecord.rights);
-                        //    status = saveData(lic);
-                        //}
-                    }
                 }
             }
-/*            if (dateChanged) {
-                state.setEarliest_record_timestamp(new java.sql.Timestamp(earliestDate.getTime().getTime()));
-                state.setLatest_record_timestamp(new java.sql.Timestamp(latestDate.getTime().getTime()));
-                updateData(state);
-            }*/
         }
         catch (Exception e) {
+            // TODO: create and save failed datamodel (in HarvestingManager...)
             logger.info("Failed to run Record-Harvester.", e);
         }
         return records;

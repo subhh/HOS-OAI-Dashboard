@@ -38,10 +38,10 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here. 
 //	private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static final boolean RESET_DATABASE = false;
+	private static final boolean RESET_DATABASE = true;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static final boolean REHARVEST = false;
+	private static final boolean REHARVEST = true;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -173,11 +173,15 @@ public class HarvestingManager {
 		List<Repository> repositories = getActiveReposFromDB();
 		if (repositories != null) {
 
+		    NextStepsCaller nextStepsCaller = (repository, dataHarvester) -> {
+                nextSteps(repository, dataHarvester);
+            };
+
 			// First Step: MultiThreaded collection of data (Json, XML etc.)
-            Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories);
+            Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories, nextStepsCaller);
 
 			// From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
-			for(Map.Entry<Repository, DataHarvester> entry: repoHarvesterMap.entrySet()) {
+/*			for(Map.Entry<Repository, DataHarvester> entry: repoHarvesterMap.entrySet()) {
 				Repository repository = entry.getKey();
 				DataHarvester dataHarvester = entry.getValue();
 
@@ -194,12 +198,32 @@ public class HarvestingManager {
 
 				// Fifth Step: Saving model to Database
 				dataModelCreator.saveDataModel();
-			}
+			}*/
 		} else {
 		    logger.info("No target repositories found in Database, doing nothing.");
         }
 		logger.info("Finished.");
 	}
+
+	private static void nextSteps(Repository repository, DataHarvester dataHarvester) {
+        // Second Step: instatiation of model
+        DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
+
+        if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
+            // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
+            DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
+
+            // Fourth Step: Validate against Hibernate/MySQL Schema + Custom Validation
+            dataModelCreator.validate();
+        }
+
+        // Fifth Step: Saving model to Database
+        dataModelCreator.saveDataModel();
+    }
+
+	private interface NextStepsCaller {
+        void callNextStep(Repository repository, DataHarvester dataHarvester);
+    }
 
 	public static void main2(String[] args) throws IOException {
 		initDatabase();
@@ -222,24 +246,35 @@ public class HarvestingManager {
 		}
 	}
 
-	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories) {
+	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories, NextStepsCaller nextStepsCaller) {
     	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();
+
+        Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
 
 		for(Repository repo : repositories) {
 			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID_PATH, METHA_SYNC_PATH,
 					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			repoHarvesterMap.put(repo, dataHarvester);
+			harvesterRepoMap.put(dataHarvester, repo);
 			dataHarvester.start();
 		}
 		logger.info("Waiting for DataHarvesters to finish ...");
-		for (DataHarvester dataHarvester : repoHarvesterMap.values()) {
-			try	{
-				dataHarvester.t.join();
-				// TODO: if no success: generate failed state and save to DB
-			} catch (Exception ex) {
-				logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), ex);
-			}
-		}
+
+		Set<DataHarvester> unfinishedHarvesters = new HashSet<>(harvesterRepoMap.keySet());
+		while(unfinishedHarvesters.size() > 0) {
+		    for(DataHarvester dataHarvester: new HashSet<>(unfinishedHarvesters)) {
+		        try {
+                    if(dataHarvester.success || dataHarvester.t.isInterrupted()) {
+                        dataHarvester.t.join();
+                        unfinishedHarvesters.remove(dataHarvester);
+                        nextStepsCaller.callNextStep(harvesterRepoMap.get(dataHarvester), dataHarvester);
+                    }
+                    Thread.sleep(100);
+                } catch(Exception e) {
+                    logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), e);
+                }
+            }
+        }
 		return repoHarvesterMap;
 	}
 }

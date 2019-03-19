@@ -8,8 +8,10 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.file.FileSystems;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -18,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 public class DataHarvester extends Thread {
 
@@ -75,7 +79,6 @@ public class DataHarvester extends Thread {
                 logger.info("Starting Metha-Sync for repo: {}", harvestingURL);
                 records = startMethaSync();
                 logger.info("Got {} records for repo: {}" , records.size(), harvestingURL);
-                HarvestedRecord rec = new HarvestedRecord();
 
                 success = true;
             } else {
@@ -121,7 +124,6 @@ public class DataHarvester extends Thread {
             File dir = new File(exportDirectory + (String) File.separator +
                     Base64.getUrlEncoder().withoutPadding().encodeToString(urlString.getBytes("UTF-8")));
 
-
             ProcessBuilder pb = new ProcessBuilder(metaSyncPath,
                     "-no-intervals", "-base-dir", exportDirectory, harvestingURL);
 
@@ -134,12 +136,16 @@ public class DataHarvester extends Thread {
                         }
                     }
                 }
-                Process p = pb.start();
-                p.waitFor();
 
-                if (p.getErrorStream().available() > 0) {
-                    logger.info(IOUtils.toString(p.getErrorStream(), "UTF-8"));
+                logger.info("Calling process: '{} {} {} {} {}'", metaSyncPath, "-no-intervals", "-base-dir", exportDirectory, harvestingURL);
+                pb.redirectErrorStream(true);
+                Process p = pb.start();
+                BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+                String line = null;
+                while((line = br.readLine()) != null) {
+                    logger.info(line);
                 }
+                p.waitFor();
             }
 
             XmlParser xmlparser = new XmlParser();
@@ -148,7 +154,7 @@ public class DataHarvester extends Thread {
             //if (dir.listFiles().length == 0) {
             //    state.setStatus("FAILED");
             //}
-            
+
             for (File filepath: dir.listFiles()) {
                 if (filepath.getName().endsWith(".xml.gz")) {
                     records.addAll(xmlparser.getRecords(
@@ -182,5 +188,21 @@ public class DataHarvester extends Thread {
 
     public Timestamp getStartTime() {
         return startTime;
+    }
+
+    private static class ProcessReadTask implements Callable<List<String>> {
+
+        private InputStream inputStream;
+
+        public ProcessReadTask(InputStream inputStream) {
+            this.inputStream = inputStream;
+        }
+
+        @Override
+        public List<String> call() {
+            return new BufferedReader(new InputStreamReader(inputStream))
+                    .lines()
+                    .collect(Collectors.toList());
+        }
     }
 }

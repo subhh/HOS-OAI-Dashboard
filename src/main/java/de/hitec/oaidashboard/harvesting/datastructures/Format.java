@@ -1,4 +1,4 @@
-package de.hitec.oaidashboard.parsers.datastructures;
+package de.hitec.oaidashboard.harvesting.datastructures;
 
 public class Format {
 	public String metadataPrefix;

@@ -1,30 +1,53 @@
 package de.hitec.oaidashboard.database.datastructures;
 
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.sql.Timestamp;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
 
 @Entity
 @Table(name = "REPOSITORY",
    uniqueConstraints = { @UniqueConstraint(columnNames = { "repository_id" }) })
 
 public class Repository {
-	private int id;
+
+	@Id
+	@GeneratedValue(strategy=GenerationType.IDENTITY)
+	private int repository_id;
+
+	@NotNull
+	@Size(max=200)
 	private String name;
+
+	@Size(max=100)
 	private String land;
+
+	@Size(max=100)
 	private String bundesland;
+
+	@Size(max=500)
 	private String geodaten;
-	private String technischePlattform;
-	private String repoTyp;
-	private String oaStatus;
-	private String harvestingUrl;
-	private Timestamp firstIndexTimestamp;
-	private String kontakt;
+
+	@Size(max=100)
+	private String technische_plattform;
+
+	@Size(max=100)
+	private String repo_typ;
+
+	@Size(max=100)
+	private String oa_status;
+
+    @NotNull
+    @Size(max=400)
+	private String harvesting_url;
+
+	private Timestamp first_index_timestamp;
+
+    @Size(max=150)
+    private String kontakt;
+
+    @NotNull
+    @Size(max=50)
 	private String state;
 
 	public Repository() {
@@ -33,51 +56,27 @@ public class Repository {
 	
 	public Repository(String name, String url) {
 		this.name = name;
-		this.harvestingUrl = url;
+		this.harvesting_url = url;
 		this.state = "ACTIVE";
 	}
 
 	public Repository(String name, String url, String mail) {
 		this.name = name;
-		this.harvestingUrl = url;
+		this.harvesting_url = url;
 		this.kontakt = mail;
 		this.state = "ACTIVE";
 	}
 
-	public boolean updateOnChange(String name, String url, String mail) {
-		boolean change = false;
-		if (this.name != name)
-		{
-			this.name = name;
-			change = true;
-		}
-		if (this.harvestingUrl != url)
-		{
-			this.harvestingUrl = url;
-			change = true;
-		}
-		if (this.kontakt != mail)
-		{
-			this.kontakt = mail;
-			change = true;
-		}
-		return change;
-	}
-
-	@Id
-	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name = "repository_id")
 	public int getId() {
-		return id;
+		return repository_id;
 	}
 
 	// Hibernate insists on having a setter method,
 	// but the id is chosen by the database.
-	private void setId(int id) {
-		this.id = id;
+	private void setId(int repository_id) {
+		this.repository_id = repository_id;
 	}
 
-	@Column(name = "name", length = 200, nullable = false)
 	public String getName() {
 		return name;
 	}
@@ -86,7 +85,6 @@ public class Repository {
 		this.name = name;
 	}
 
-	@Column(name = "land", length = 100)
 	public String getLand() {
 		return land;
 	}
@@ -95,7 +93,6 @@ public class Repository {
 		this.land = land;
 	}
 
-	@Column(name = "bundesland", length = 100)
 	public String getBundesland() {
 		return bundesland;
 	}
@@ -104,7 +101,6 @@ public class Repository {
 		this.bundesland = bundesland;
 	}
 
-	@Column(name = "geodaten", length = 500)
 	public String getGeodaten() {
 		return geodaten;
 	}
@@ -113,52 +109,45 @@ public class Repository {
 		this.land = geodaten;
 	}
 	
-	@Column(name = "technische_plattform", length = 100)
-	public String getTechnischePlattform() {
-		return technischePlattform;
+	public String getTechnische_plattform() {
+		return technische_plattform;
 	}
 
-	public void setTechnischePlattform( String technischePlattform ) {
-		this.technischePlattform = technischePlattform;
+	public void setTechnische_plattform(String technische_plattform) {
+		this.technische_plattform = technische_plattform;
 	}
 	
-	@Column(name = "repo_typ", length = 100)
-	public String getRepoTyp() {
-		return repoTyp;
+	public String getRepo_typ() {
+		return repo_typ;
 	}
 
-	public void setRepoTyp( String repoTyp ) {
-		this.repoTyp = repoTyp;
+	public void setRepo_typ(String repo_typ) {
+		this.repo_typ = repo_typ;
 	}
 	
-	@Column(name = "oa_status", length = 100)
-	public String getOaStatus() {
-		return oaStatus;
+	public String getOa_status() {
+		return oa_status;
 	}
 
-	public void setOaStatus( String status ) {
-		this.oaStatus = status;
+	public void setOa_status(String status ) {
+		this.oa_status = status;
 	}
 	
-	@Column(name = "harvesting_url", length = 400, nullable = false)
-	public String getHarvestingUrl() {
-		return harvestingUrl;
+	public String getHarvesting_url() {
+		return harvesting_url;
 	}
 
-	public void setHarvestingUrl( String harvestingUrl ) {
-		this.harvestingUrl = harvestingUrl;
+	public void setHarvesting_url(String harvesting_url) {
+		this.harvesting_url = harvesting_url;
 	}
 
-	@Column(name = "first_index_timestamp")
-	public Timestamp getFirstIndexTimestamp() {
-		return firstIndexTimestamp;
+	public Timestamp getFirst_index_timestamp() {
+		return first_index_timestamp;
 	}
 
 	public void setfirstIndexTimestamp( Timestamp firstIndexTimestamp ) {
-		this.firstIndexTimestamp = firstIndexTimestamp;
+		this.first_index_timestamp = firstIndexTimestamp;
 	}
-
-	@Column(name = "kontakt", length = 150)
 	public String getKontakt() {
 		return kontakt;
 	}
@@ -167,7 +156,6 @@ public class Repository {
 		this.kontakt = kontakt;
 	}
 
-	@Column(name = "state", length = 50, nullable = false)
 	public String getState() {
 		return state;
 	}

@@ -1,7 +1,9 @@
-package de.hitec.oaidashboard.database;
+package de.hitec.oaidashboard;
 
 import de.hitec.oaidashboard.aggregation.DataAggregator;
-import de.hitec.oaidashboard.database.datastructures2.*;
+import de.hitec.oaidashboard.database.DataModelCreator;
+import de.hitec.oaidashboard.database.datastructures.*;
+import de.hitec.oaidashboard.harvesting.DataHarvester;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -23,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class ManageHarvester2 {
+public class HarvestingManager {
 
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
 	private static final String METHA_ID_PATH = "/usr/sbin/metha-id";
@@ -36,7 +38,7 @@ public class ManageHarvester2 {
 	// Also, the metha-id answer will be stored here. 
 //	private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static final boolean RESET_DATABASE = true;
+	private static final boolean RESET_DATABASE = false;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
 	private static final boolean REHARVEST = false;
@@ -50,7 +52,7 @@ public class ManageHarvester2 {
 		File outputFile = new File(SCRIPT_FILE);
 		if (outputFile.exists()) { outputFile.delete(); }
 		String outputFilePath = outputFile.getAbsolutePath();
-		System.out.println("Export file: " + outputFilePath);
+		logger.info("Export file: {}", outputFilePath);
 		export.setDelimiter(";");
 		export.setOutputFile(outputFilePath);
 		// No Stop if Error
@@ -165,7 +167,7 @@ public class ManageHarvester2 {
 		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
 	}
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) {
 		initDatabase();
 
 		List<Repository> repositories = getActiveReposFromDB();
@@ -180,23 +182,22 @@ public class ManageHarvester2 {
 				DataHarvester dataHarvester = entry.getValue();
 
 				// Second Step: instatiation of model
-				HarvestingDataModel harvestingDataModel = new HarvestingDataModel(repository, dataHarvester, factory);
+				DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
 
-				// Third Step: data aggregation (counting records, licences etc., mapping licences and more)
-				DataAggregator dataAggregator = new DataAggregator(harvestingDataModel);
+				if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
+                    // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
+                    DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
 
-				harvestingDataModel.validate();
+                    // Fourth Step: Validate against Hibernate/MySQL Schema + Custom Validation
+                    dataModelCreator.validate();
+                }
 
-				// Fourth Step: Saving model to Database
-				/**
-				 * IMPORTANT: the saving operation should always be done directly after instantiating a new HarvestingDataModel-Object
-				 * or before creating a new one.
-				 * If you create multiple HarvestingDataModels without saving in between, you can easily create inconsistencies in the Database,
-				 * for example doublets of MetadataFormats, Sets, Records etc.
-				 */
-				harvestingDataModel.saveDataModel();
+				// Fifth Step: Saving model to Database
+				dataModelCreator.saveDataModel();
 			}
-		}
+		} else {
+		    logger.info("No target repositories found in Database, doing nothing.");
+        }
 		logger.info("Finished.");
 	}
 
@@ -207,7 +208,8 @@ public class ManageHarvester2 {
 		Object id = null;
 
 		try {
-			HarvestingState test = session.get(HarvestingState.class, new Long(1));
+			HarvestingState test = session.get(HarvestingState.class, new Long(3));
+
 			for(LicenceCount licenceCount: test.getLicenceCounts()) {
 				logger.info("LicenceCount licence_name: {}, record_count: {}", licenceCount.getLicence_name(), licenceCount.getRecord_count());
 			}
@@ -224,7 +226,7 @@ public class ManageHarvester2 {
     	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();
 
 		for(Repository repo : repositories) {
-			DataHarvester dataHarvester = new DataHarvester(repo.getHarvestingUrl(), METHA_ID_PATH, METHA_SYNC_PATH,
+			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID_PATH, METHA_SYNC_PATH,
 					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			repoHarvesterMap.put(repo, dataHarvester);
 			dataHarvester.start();

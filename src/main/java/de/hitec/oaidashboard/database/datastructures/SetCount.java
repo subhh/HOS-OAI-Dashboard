@@ -1,4 +1,4 @@
-package de.hitec.oaidashboard.database.datastructures2;
+package de.hitec.oaidashboard.database.datastructures;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -28,6 +28,10 @@ public class SetCount {
     @JoinColumn(name = "state_id")
     private HarvestingState state;
 
+    public SetCount() {
+
+    }
+
     public SetCount(String set_name, String set_spec, HarvestingState state) {
         this.set_name = set_name;
         this.set_spec = set_spec;
@@ -41,7 +45,6 @@ public class SetCount {
     public void setId(long sc_id) {
         this.sc_id = sc_id;
     }
-
 
     public String getSet_name() {
         return set_name;

@@ -1,6 +1,6 @@
-package de.hitec.oaidashboard.parsers;
+package de.hitec.oaidashboard.harvesting;
 
-import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
+import de.hitec.oaidashboard.harvesting.datastructures.HarvestedRecord;
 import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.events.XMLEvent;

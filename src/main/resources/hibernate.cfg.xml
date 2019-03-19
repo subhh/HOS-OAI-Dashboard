@@ -12,11 +12,11 @@
 
         <!--<property name = "hibernate.show_sql">true</property>-->
  
- 		<mapping class = "de.hitec.oaidashboard.database.datastructures2.Repository" />
- 		<mapping class = "de.hitec.oaidashboard.database.datastructures2.HarvestingState" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.LicenceCount" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.SetCount" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures2.MetadataFormat" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.Repository" />
+ 		<mapping class = "de.hitec.oaidashboard.database.datastructures.HarvestingState" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures.LicenceCount" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures.SetCount" />
+        <mapping class = "de.hitec.oaidashboard.database.datastructures.MetadataFormat" />
 
     </session-factory>
 </hibernate-configuration>

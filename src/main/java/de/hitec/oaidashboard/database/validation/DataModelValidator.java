@@ -1,7 +1,7 @@
 package de.hitec.oaidashboard.database.validation;
 
-import de.hitec.oaidashboard.database.datastructures2.LicenceCount;
-import de.hitec.oaidashboard.database.datastructures2.SetCount;
+import de.hitec.oaidashboard.database.datastructures.LicenceCount;
+import de.hitec.oaidashboard.database.datastructures.SetCount;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,14 +24,12 @@ public class DataModelValidator {
         return validateLicenceCountAgainstHibernate(licenceCount);
     }
 
-
     public static boolean isValidSetCount(SetCount setCount) {
         return validateSetCountAgainstHibernate(setCount);
     }
 
     private static boolean validateLicenceCountAgainstHibernate(LicenceCount licenceCount) {
         boolean isValid = false;
-
         Validator validator = Validation
                 .buildDefaultValidatorFactory()
                 .getValidator();
@@ -49,13 +47,11 @@ public class DataModelValidator {
                         violation.getInvalidValue());
             }
         }
-
         return isValid;
     }
 
     private static boolean validateSetCountAgainstHibernate(SetCount setCount) {
         boolean isValid = false;
-
         Validator validator = Validation
                 .buildDefaultValidatorFactory()
                 .getValidator();
@@ -73,7 +69,6 @@ public class DataModelValidator {
                         violation.getInvalidValue());
             }
         }
-
         return isValid;
     }
 }

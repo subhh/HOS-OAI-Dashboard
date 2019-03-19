@@ -1,4 +1,4 @@
-package de.hitec.oaidashboard.database.datastructures2;
+package de.hitec.oaidashboard.database.datastructures;
 
 public enum LicenceType {
     UNASSIGNED,

@@ -1,12 +1,13 @@
-package de.hitec.oaidashboard.database.datastructures2;
+package de.hitec.oaidashboard.database.datastructures;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.sql.Timestamp;
 import java.util.Set;
 
 @Entity
-@Table(name = "STATE",
+@Table(name = "HARVESTINGSTATE",
    uniqueConstraints = { @UniqueConstraint(columnNames = { "state_id" }) })
 
 public class HarvestingState {
@@ -21,33 +22,28 @@ public class HarvestingState {
     @NotNull
 	private Timestamp timestamp;
 
-    @Column(name = "record_count_fulltext")
-	private long recordCountFulltext;
+	private long record_count_fulltext;
 
-    @Column(name = "record_count_oa")
-    private long recordCountOA;
+    private long record_count_oa;
 
-    @Column(name = "earliest_record_timestamp")
-    private Timestamp earliestRecordTimestamp;
+    private Timestamp earliest_record_timestamp;
 
-    @Column(name = "latest_record_timestamp")
-	private Timestamp latestRecordTimestamp;
+	private Timestamp latest_record_timestamp;
 
     @ManyToOne(optional = false)
     @JoinColumn(name="repository_id", referencedColumnName="repository_id", updatable=false)
 	private Repository repository;
 
-    @Column(name = "status", length = 50, nullable = false)
-    private String status;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    private HarvestingStatus status;
 
-    @Column(name = "start_time")
-	private Timestamp startTime;
+	private Timestamp start_time;
 
-    @Column(name = "end_time")
-	private Timestamp endTime;
+	private Timestamp end_time;
 
-    @Column(name = "error_message", length = 300)
-    private String errorMessage;
+    @Size(max=300)
+    private String error_message;
 
     @OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
     private Set<LicenceCount> licenceCounts;
@@ -59,7 +55,7 @@ public class HarvestingState {
     private Set<MetadataFormat> metadataFormats;
 
     public HarvestingState() {}
-	public HarvestingState(Timestamp timestamp, Repository repo, String status) {
+	public HarvestingState(Timestamp timestamp, Repository repo, HarvestingStatus status) {
 		this.timestamp = timestamp;
 		this.repository = repo;
 		this.status = status;
@@ -92,68 +88,68 @@ public class HarvestingState {
 		this.timestamp = timestamp;
 	}
 
-	public long getRecordCountFulltext() {
-		return recordCountFulltext;
+	public long getRecord_count_fulltext() {
+		return record_count_fulltext;
 	}
 
-	public void setRecordCountFulltext( long rc ) {
-		this.recordCountFulltext = rc;
+	public void setRecord_count_fulltext(long rc ) {
+		this.record_count_fulltext = rc;
 	}
 
-	public long getRecordCountOA() {
-		return recordCountOA;
+	public long getRecord_count_oa() {
+		return record_count_oa;
 	}
 
-	public void setRecordCountOA( long rc ) {
-		this.recordCountOA = rc;
+	public void setRecord_count_oa(long rc ) {
+		this.record_count_oa = rc;
 	}
 
-	public Timestamp getEarliestRecordTimestamp() {
-		return earliestRecordTimestamp;
+	public Timestamp getEarliest_record_timestamp() {
+		return earliest_record_timestamp;
 	}
 
-	public void setEarliestRecordTimestamp( Timestamp timestamp ) {
-		this.earliestRecordTimestamp = timestamp;
+	public void setEarliest_record_timestamp(Timestamp timestamp ) {
+		this.earliest_record_timestamp = timestamp;
 	}
 
-	public Timestamp getLatestRecordTimestamp() {
-		return latestRecordTimestamp;
+	public Timestamp getLatest_record_timestamp() {
+		return latest_record_timestamp;
 	}
 
-	public void setLatestRecordTimestamp( Timestamp timestamp ) {
-		this.latestRecordTimestamp = timestamp;
+	public void setLatest_record_timestamp(Timestamp timestamp ) {
+		this.latest_record_timestamp = timestamp;
 	}
 
-	public String getStatus() {
+	public HarvestingStatus getStatus() {
 		return status;
 	}
 
-	public void setStatus( String status ) {
+	public void setStatus( HarvestingStatus status ) {
 		this.status = status;
 	}
 
-	public Timestamp getStartTime() {
-		return startTime;
+	public Timestamp getStart_time() {
+		return start_time;
 	}
 
 	public void setstartTime( Timestamp start ) {
-		this.startTime = start;
+		this.start_time = start;
 	}
 
-	public Timestamp getEndTime() {
-		return endTime;
+	public Timestamp getEnd_time() {
+		return end_time;
 	}
 
-	public void setEndTime(Timestamp end ) {
-		this.endTime = end;
+	public void setEnd_time(Timestamp end ) {
+		this.end_time = end;
 	}
 
-	public String getErrorMessage() {
-		return errorMessage;
+	public String getError_message() {
+		return error_message;
 	}
 
-	public void setErrorMessage( String errorMessage ) {
-		this.errorMessage = errorMessage;
+	public void setError_message(String error_message) {
+		this.error_message = error_message;
 	}
 
 	public Repository getRepository() {

@@ -1,11 +1,12 @@
-package de.hitec.oaidashboard.parsers;
+package de.hitec.oaidashboard.harvesting;
 
 import java.io.*;
 import com.dslplatform.json.*;
 import com.dslplatform.json.runtime.Settings;
-import de.hitec.oaidashboard.parsers.datastructures.Format;
 import org.apache.commons.io.IOUtils;
-import de.hitec.oaidashboard.parsers.datastructures.MethaIdStructure;
+import de.hitec.oaidashboard.harvesting.datastructures.MethaIdStructure;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 
 public class JsonParser {
@@ -14,8 +15,8 @@ public class JsonParser {
 	private static DslJson<Object> dslJson;
 	private MethaIdStructure instance;
 
-	public JsonParser() {};
-	
+    private static Logger logger = LogManager.getLogger(Class.class.getName());
+
 	public JsonParser(InputStream is, String filename) throws Exception
 	{
 	    // initialise json decoder
@@ -29,7 +30,7 @@ public class JsonParser {
 		try (FileOutputStream stream = new FileOutputStream(filename)) {
 		    stream.write(toFile);
 		}
-		System.out.println("Metadata received: " + instance.identify.repositoryName);
+		logger.info("Metadata received: {}", instance.identify.repositoryName);
 	}
 
 	public MethaIdStructure getJsonStructure() {

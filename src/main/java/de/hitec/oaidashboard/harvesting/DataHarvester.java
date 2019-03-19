@@ -1,11 +1,9 @@
-package de.hitec.oaidashboard.database;
+package de.hitec.oaidashboard.harvesting;
 
-import de.hitec.oaidashboard.parsers.JsonParser;
-import de.hitec.oaidashboard.parsers.XmlParser;
-import de.hitec.oaidashboard.parsers.datastructures.Format;
-import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
-import de.hitec.oaidashboard.parsers.datastructures.MethaIdStructure;
-import de.hitec.oaidashboard.parsers.datastructures.MethaSet;
+import de.hitec.oaidashboard.harvesting.datastructures.Format;
+import de.hitec.oaidashboard.harvesting.datastructures.HarvestedRecord;
+import de.hitec.oaidashboard.harvesting.datastructures.MethaIdStructure;
+import de.hitec.oaidashboard.harvesting.datastructures.MethaSet;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -43,7 +41,7 @@ public class DataHarvester extends Thread {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    DataHarvester(String harvestingURL, String mip, String msp,
+    public DataHarvester(String harvestingURL, String mip, String msp,
                   String gd, String ed, boolean reharvest) {
         this.harvestingURL = harvestingURL;
         this.metaIdPath = mip;
@@ -128,7 +126,7 @@ public class DataHarvester extends Thread {
             // and the requested format string (as default) 'oai_dc' and '#' together with the given url.
             // Then, the whole string is base64-encoded.
             // This directory name can be retrieved with the following call:
-            // metha-sync -dir -base-dir <exportDirectory> <repo.getHarvestingUrl()>.
+            // metha-sync -dir -base-dir <exportDirectory> <repo.getHarvesting_url()>.
             // but the direct computation is most probably better performing:
 
             String urlString = "#oai_dc#" + harvestingURL;
@@ -164,7 +162,7 @@ public class DataHarvester extends Thread {
 
             // TODO: where to set start end endtime of state
             //calendar = Calendar.getInstance();
-            //state.setEndTime(new java.sql.Timestamp(
+            //state.setEnd_time(new java.sql.Timestamp(
             //        calendar.getTime().getTime()));
 
             XmlParser xmlparser = new XmlParser();
@@ -203,8 +201,8 @@ public class DataHarvester extends Thread {
                 }
             }
 /*            if (dateChanged) {
-                state.setEarliestRecordTimestamp(new java.sql.Timestamp(earliestDate.getTime().getTime()));
-                state.setLatestRecordTimestamp(new java.sql.Timestamp(latestDate.getTime().getTime()));
+                state.setEarliest_record_timestamp(new java.sql.Timestamp(earliestDate.getTime().getTime()));
+                state.setLatest_record_timestamp(new java.sql.Timestamp(latestDate.getTime().getTime()));
                 updateData(state);
             }*/
         }

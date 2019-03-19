@@ -1,4 +1,4 @@
-package de.hitec.oaidashboard.database.datastructures2;
+package de.hitec.oaidashboard.database.datastructures;
 
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
@@ -29,6 +29,10 @@ public class LicenceCount {
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "state_id")
     private HarvestingState state;
+
+    public LicenceCount() {
+
+    }
 
     public LicenceCount(String licence_name, HarvestingState state) {
         this.licence_name = licence_name;

@@ -1,8 +1,8 @@
 package de.hitec.oaidashboard.aggregation;
 
-import de.hitec.oaidashboard.database.HarvestingDataModel;
-import de.hitec.oaidashboard.database.datastructures2.*;
-import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
+import de.hitec.oaidashboard.database.DataModelCreator;
+import de.hitec.oaidashboard.database.datastructures.*;
+import de.hitec.oaidashboard.harvesting.datastructures.HarvestedRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -15,11 +15,11 @@ import static java.lang.Math.toIntExact;
 
 public class DataAggregator {
 
-    private final HarvestingDataModel dataModel;
+    private final DataModelCreator dataModel;
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public DataAggregator(HarvestingDataModel harvestingDataModel) {
-        this.dataModel = harvestingDataModel;
+    public DataAggregator(DataModelCreator dataModelCreator) {
+        this.dataModel = dataModelCreator;
 
         countEntities();
         markLicences();
@@ -94,6 +94,6 @@ public class DataAggregator {
         logger.debug(licenceTypeCount);
         long oaCount = licenceTypeCount.getOrDefault(LicenceType.OPEN, 0);
         logger.info("Found {} Licences that are OPEN", oaCount);
-        dataModel.getState().setRecordCountOA(oaCount);
+        dataModel.getState().setRecord_count_oa(oaCount);
     }
 }

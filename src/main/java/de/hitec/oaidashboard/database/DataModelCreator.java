@@ -1,10 +1,11 @@
 package de.hitec.oaidashboard.database;
 
-import de.hitec.oaidashboard.database.datastructures2.*;
+import de.hitec.oaidashboard.database.datastructures.*;
 import de.hitec.oaidashboard.database.validation.DataModelValidator;
-import de.hitec.oaidashboard.parsers.datastructures.Format;
-import de.hitec.oaidashboard.parsers.datastructures.HarvestedRecord;
-import de.hitec.oaidashboard.parsers.datastructures.MethaSet;
+import de.hitec.oaidashboard.harvesting.DataHarvester;
+import de.hitec.oaidashboard.harvesting.datastructures.Format;
+import de.hitec.oaidashboard.harvesting.datastructures.HarvestedRecord;
+import de.hitec.oaidashboard.harvesting.datastructures.MethaSet;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -19,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class HarvestingDataModel {
+public class DataModelCreator {
 
     private final Repository repository;
     private final DataHarvester dataHarvester;
@@ -28,11 +29,10 @@ public class HarvestingDataModel {
     private HarvestingState state = null;
 
     private List<HarvestedRecord> harvestedRecords = null; // records may not be empty -> do not instantiate empty list
-    Set<SetCount> setCounts = new HashSet<>(); // SetCounts may be empty
 
-    private static Logger logger = LogManager.getRootLogger();
+    private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public HarvestingDataModel(Repository repository, DataHarvester dataHarvester, SessionFactory factory) {
+    public DataModelCreator(Repository repository, DataHarvester dataHarvester, SessionFactory factory) {
 
         this.repository = repository;
         this.dataHarvester = dataHarvester;
@@ -45,65 +45,33 @@ public class HarvestingDataModel {
 
     private void initDataModel() {
 
-        Set<MetadataFormat> metadataFormats = null; // metadataformats may not be empty -> do not instantiate empty list
-        Set<LicenceCount> licenceCounts = null; // licenceCounts may be not be empty -> do not instantiate empty list
+        this.state = new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, HarvestingStatus.SUCCESS);
 
-        // create state SUCCESS and connect all data
-        state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "SUCCESS");
-
-        // convert all Data (raw) to Java/Hibernate-DataModel
         try {
+            // convert all Data (raw) to Java/Hibernate-DataModel
+            Set<LicenceCount> licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
+            Set<SetCount> setCounts = createSetCounts(dataHarvester.getSets(), state);
+            Set<MetadataFormat> metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
 
-            logger.info("Creating LicenceCounts (JavaModel) for repo: {}", repository.getHarvestingUrl());
-            licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
+            // metadataFormats and licenceCounts should always be there for any given repository
+            if((metadataFormats.size() > 0) && (licenceCounts.size() > 0)) {
+                state.setLicenceCounts(licenceCounts);
+                state.setSetCounts(setCounts);
+                state.setMetadataFormats(metadataFormats);
+            } else {
+                if(metadataFormats.size() == 0) { setStateToFailed("GOT 0 METADATAFORMATS"); }
+                if(licenceCounts.size() == 0) { setStateToFailed("GOT 0 LICENCES"); }
+            }
 
-            logger.info("Creating SetCounts (JavaModel) for repo: {}", repository.getHarvestingUrl());
-            setCounts = createSetCounts(dataHarvester.getSets(), state);
-
-            logger.info("Creating MetadaFormats (JavaModel) for repo: {}", repository.getHarvestingUrl());
-            metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
-
-        } catch (DataModelException dataModelException) {
-            dataModelException.printStackTrace();
-            // TODO: create a FAILED empty state instead of SUCCESS
         } catch (Exception e) {
             e.printStackTrace();
-            // TODO: create a FAILED empty state instead of SUCCESS
+            setStateToFailed("UNHANDLED EXCEPTION: " + e.getMessage());
         }
-
-        //logger.info("Mapping Licences to current HarvestingState for repo: {}", repository.getHarvestingUrl());
-
-        state.setLicenceCounts(licenceCounts);
-        state.setSetCounts(setCounts);
-        state.setMetadataFormats(metadataFormats);
-
-/*
-        if(metadataFormats != null && records != null) {
-            logger.info("Adding MetadataFormats to current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            state.setMetadataFormats(metadataFormats);
-
-            logger.info("Adding OAISets to current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            for(OAISet oaiSet: oaiSets) {
-                DataModelValidator.isValidOAISet(oaiSet);
-            }
-            mapStateToSets(state, oaiSets);
-
-            logger.info("Adding Records to current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            mapRecordsToState(state, records);
-
-            logger.info("Mapping Records and Sets for current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            mapRecordsToSets(records, oaiSets);
-
-            logger.info("Mapping Records and Licences to current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            mapRecordsToLicences(records, licences);
-
-            logger.info("Mapping Licences to State for current HarvestingState for repo: {}", repository.getHarvestingUrl());
-            mapStateToLicences(state, licences);
-        }
-*/
     }
 
-    private Set<LicenceCount> createLicenceCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) throws DataModelException {
+    private Set<LicenceCount> createLicenceCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) {
+        logger.info("Creating LicenceCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
+
         Set<String> licences_raw = recordsRaw.stream().
                 map(harvestedRecord -> harvestedRecord.rights).
                 collect(Collectors.toSet());
@@ -118,6 +86,7 @@ public class HarvestingDataModel {
     }
 
     private Set<SetCount> createSetCounts(List<MethaSet> setsRaw, HarvestingState state) {
+        logger.info("Creating SetCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
         Set<SetCount> setCounts = new HashSet<>();
         for(MethaSet setRaw: setsRaw) {
             logger.debug("Creating new SetCount with set_name: '{}' and set_spec: '{}'", setRaw.setName, setRaw.setSpec);
@@ -128,13 +97,14 @@ public class HarvestingDataModel {
     }
 
     private Set<MetadataFormat> createMetadataFormats(List<Format> formatsRaw, HarvestingState state) {
+        logger.info("Creating MetadaFormats (JavaModel) for repo: {}", repository.getHarvesting_url());
         Set<MetadataFormat> metadataFormats = new HashSet<>();
         for(Format formatRaw: formatsRaw) {
             logger.debug("Creating new MetadataFormat with prefix: '{}', schema: {} and " +
                     "namespace: '{}'", formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace);
             metadataFormats.add(new MetadataFormat(formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace, state));
         }
-        logger.info("Created {} MetadataFormats!", metadataFormats.size());
+        logger.debug("Created {} MetadataFormats!", metadataFormats.size());
         return metadataFormats;
     }
 
@@ -144,10 +114,9 @@ public class HarvestingDataModel {
 
     private void saveDataModel(boolean fallback) {
         if(state != null) {
-            logger.info("Attempting to save HarvestingState into database for repo: {}", repository.getHarvestingUrl());
+            logger.info("Attempting to save HarvestingState into database for repo: {}", repository.getHarvesting_url());
             Session session = factory.openSession();
             Transaction tx = session.beginTransaction();
-            Object id = null;
 
             try {
                 setStartAndEndtimeOfState();
@@ -155,10 +124,9 @@ public class HarvestingDataModel {
                 tx.commit();
             } catch (Exception e) {
                 if (tx != null) tx.rollback();
-                logger.info("Exception while creating DataModel for repo: {}", repository.getHarvestingUrl(), e);
-                // TODO: Rework fallback-logic!
+                logger.info("Exception while creating DataModel for repo: {}", repository.getHarvesting_url(), e);
                 if(!fallback) {
-                    createFailedState();
+                    setStateToFailed("UNKNOWN EXCEPTION");
                     session.close();
                     saveDataModel(true);
                 } else {
@@ -173,17 +141,33 @@ public class HarvestingDataModel {
                 session.close();
             }
         } else {
-            // TODO: create a FAILED empty state instead of SUCCESS and try to save it
+            this.state = new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, HarvestingStatus.FAILURE);
+            setStateToFailed("UNKNOWN ERROR");
+            saveDataModel();
         }
     }
 
-    private void createFailedState() {
-        state =	new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, "FAILURE");
+    private void setStateToFailed(String error_message) {
+        logger.error("Something happened, error_message: '{}', " +
+                "setting current HarvestingState to 'FAILURE' for repo: {}",
+                error_message,
+                repository.getHarvesting_url());
+
+        state.setLicenceCounts(null);
+        state.setMetadataFormats(null);
+        state.setSetCounts(null);
+        state.setEarliest_record_timestamp(null);
+        state.setLatest_record_timestamp(null);
+        state.setRecord_count(0);
+        state.setRecord_count_oa(0);
+        state.setRecord_count_fulltext(0);
+        state.setError_message(error_message);
+        state.setStatus(HarvestingStatus.FAILURE);
     }
 
     private void setStartAndEndtimeOfState() {
         state.setstartTime(dataHarvester.getStartTime());
-        state.setEndTime(new Timestamp(Calendar.getInstance().getTime().getTime()));
+        state.setEnd_time(new Timestamp(Calendar.getInstance().getTime().getTime()));
     }
 
     public HarvestingState getState() {
@@ -194,12 +178,8 @@ public class HarvestingDataModel {
         return this.harvestedRecords;
     }
 
-    public Set<SetCount> getSetCounts() {
-        return this.setCounts;
-    }
-
     public void validate() {
-        logger.info("Validating DataModel against Hibernate annotations: {}", repository.getHarvestingUrl());
+        logger.info("Validating DataModel against Hibernate annotations: {}", repository.getHarvesting_url());
         for(LicenceCount licenceCount: state.getLicenceCounts()) {
             DataModelValidator.isValidLicenceCount(licenceCount);
         }

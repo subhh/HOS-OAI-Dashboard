@@ -1,62 +1,64 @@
 package de.hitec.oaidashboard.database.datastructures;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
 @Table(name = "METADATAFORMAT",
    uniqueConstraints = { @UniqueConstraint(columnNames = { "format_id" }) })
 
 public class MetadataFormat {
-	private int id;
-	private String formatPrefix; 
-	private String schema;   
-	private String namespace;
-	
-	public MetadataFormat() {}
-	public MetadataFormat(String formatPrefix, String schema, String namespace) {
-		this.formatPrefix = formatPrefix;
-		this.schema = schema;
-		this.namespace = namespace;
-	}
 
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name = "format_id")
-	public int getId() {
-		return id;
+	private long format_id;
+
+	@NotNull
+	@Size(max=100)
+	private String prefix;
+
+	@NotNull
+	@Size(max=200)
+	private String format_schema;
+
+	@NotNull
+	@Size(max=200)
+	private String namespace;
+
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "state_id")
+    private HarvestingState state;
+
+    public MetadataFormat() {
+
+    }
+	public MetadataFormat(String prefix, String format_schema, String namespace, HarvestingState state) {
+		this.prefix = prefix;
+		this.format_schema = format_schema;
+		this.namespace = namespace;
+		this.state = state;
+	}
+
+
+	public long getId() {
+		return format_id;
 	}
 
 	// Hibernate insists on having a setter method,
-	// but the id is chosen by the database.
-	private void setId(int id) {
-		this.id = id;
+	// but the metadataformat_id is chosen by the database.
+	private void setId(long format_id) {
+		this.format_id = format_id;
 	}
 
-	@Column(name = "format_prefix", length = 100, nullable = false)
-	public String getFormatPrefix() {
-		return formatPrefix;
+	public String getPrefix() {
+		return prefix;
 	}
 
-	public void setFormatPrefix( String formatPrefix ) {
-		this.formatPrefix = formatPrefix;
+	public void setPrefix( String prefix ) {
+		this.prefix = prefix;
 	}
 
-	@Column(name = "format_schema", length = 200, nullable = false)
-	public String getSchema() {
-		return schema;
-	}
-
-	public void setSchema( String schema ) {
-		this.schema = schema;
-	}
-
-	@Column(name = "namespace", length = 200, nullable = false)
 	public String getNamespace() {
 		return namespace;
 	}
@@ -64,4 +66,20 @@ public class MetadataFormat {
 	public void setNamespace( String namespace ) {
 		this.namespace = namespace;
 	}
+
+    public HarvestingState getState() {
+        return state;
+    }
+
+    public void setState(HarvestingState state) {
+        this.state = state;
+    }
+
+    public String getFormat_schema() {
+        return format_schema;
+    }
+
+    public void setFormat_schema(String format_schema) {
+        this.format_schema = format_schema;
+    }
 }

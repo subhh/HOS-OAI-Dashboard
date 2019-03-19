@@ -3,7 +3,7 @@ package de.hitec.oaidashboard.database.datastructures2;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import java.util.List;
+
 
 @Entity
 @Table(name = "LICENCECOUNT",
@@ -20,8 +20,8 @@ public class LicenceCount {
     private String licence_name;
 
     @NotNull
-    @Size(max=200)
-    private String licence_type;
+    @Enumerated(EnumType.STRING)
+    private LicenceType licence_type;
 
     @NotNull
     private Integer record_count;
@@ -32,7 +32,7 @@ public class LicenceCount {
 
     public LicenceCount(String licence_name, HarvestingState state) {
         this.licence_name = licence_name;
-        this.licence_type = "UNASSIGNED";
+        this.licence_type = LicenceType.UNASSIGNED;
         this.state = state;
     }
 
@@ -52,11 +52,11 @@ public class LicenceCount {
         this.licence_name = licence_name;
     }
 
-    public String getLicence_type() {
+    public LicenceType getLicence_type() {
         return licence_type;
     }
 
-    public void setLicence_type(String type) {
+    public void setLicence_type(LicenceType licence_type) {
         this.licence_type = licence_type;
     }
 

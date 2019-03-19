@@ -134,7 +134,7 @@ public class HarvestingDataModel {
     private Set<MetadataFormat> createMetadataFormats(List<Format> formatsRaw, HarvestingState state) {
         Set<MetadataFormat> metadataFormats = new HashSet<>();
         for(Format formatRaw: formatsRaw) {
-            logger.info("Creating new MetadataFormat with prefix: '{}', schema: {} and " +
+            logger.debug("Creating new MetadataFormat with prefix: '{}', schema: {} and " +
                     "namespace: '{}'", formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace);
             metadataFormats.add(new MetadataFormat(formatRaw.metadataPrefix, formatRaw.schema, formatRaw.metadataNamespace, state));
         }

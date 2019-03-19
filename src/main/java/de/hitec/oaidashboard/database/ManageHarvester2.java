@@ -36,7 +36,7 @@ public class ManageHarvester2 {
 	// Also, the metha-id answer will be stored here. 
 //	private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static final boolean RESET_DATABASE = false;
+	private static final boolean RESET_DATABASE = true;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
 	private static final boolean REHARVEST = false;

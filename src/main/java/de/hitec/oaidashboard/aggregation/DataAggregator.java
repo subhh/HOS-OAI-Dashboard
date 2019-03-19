@@ -9,9 +9,9 @@ import org.apache.logging.log4j.Logger;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.lang.Math.toIntExact;
+
 
 public class DataAggregator {
 
@@ -22,6 +22,8 @@ public class DataAggregator {
         this.dataModel = harvestingDataModel;
 
         countEntities();
+        markLicences();
+        countOARecords();
     }
 
     private void countEntities() {
@@ -62,14 +64,36 @@ public class DataAggregator {
     }
 
     private Map<String, Long> countStrings(List<String> strings) {
-        //Map<String, Integer> countMap = new HashMap<>();
-
         return strings.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
 
-        /*for(String s: strings) {
-            int count = countMap.containsKey(s) ? countMap.get(s) : 0;
-            countMap.put(s, count + 1);
+    private void markLicences() {
+        logger.info("Marking Licences (LicenceCount) as OPEN, CLOSED or UNKNOWN");
+        Set<LicenceCount> licenceCounts = dataModel.getState().getLicenceCounts();
+        for(LicenceCount licenceCount: licenceCounts) {
+            if(licenceCount.getLicence_name().toLowerCase().contains("creativecommons")) {
+                logger.debug("Marked Licence with with licence_name: '{}', as OPEN", licenceCount.getLicence_name());
+                licenceCount.setLicence_type(LicenceType.OPEN);
+            } else if(licenceCount.getLicence_name().toLowerCase().contains("openaccess")) {
+                logger.debug("Marked Licence with with licence_name: '{}', as OPEN", licenceCount.getLicence_name());
+                licenceCount.setLicence_type(LicenceType.OPEN);
+            } else if(licenceCount.getLicence_name().toLowerCase().contains("embargoedaccess")) {
+                logger.debug("Marked Licence with with licence_name: '{}', as CLOSED", licenceCount.getLicence_name());
+                licenceCount.setLicence_type(LicenceType.CLOSED);
+            } else {
+                logger.debug("Marked Licence with with licence_name: '{}', as UNKNOWN", licenceCount.getLicence_name());
+                licenceCount.setLicence_type(LicenceType.UNKNOWN);
+            }
         }
-        return countMap;*/
+    }
+    
+    private void countOARecords() {
+        Set<LicenceCount> licenceCounts = dataModel.getState().getLicenceCounts();
+        Map<Enum, Integer> licenceTypeCount = licenceCounts.stream().collect(
+                Collectors.groupingBy(LicenceCount::getLicence_type, Collectors.summingInt(LicenceCount::getRecord_count)));
+        logger.debug(licenceTypeCount);
+        long oaCount = licenceTypeCount.get(LicenceType.OPEN);
+        logger.info("Found {} Licences that are OPEN", oaCount);
+        dataModel.getState().setRecordCountOA(oaCount);
     }
 }

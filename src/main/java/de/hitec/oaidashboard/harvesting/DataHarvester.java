@@ -4,7 +4,6 @@ import de.hitec.oaidashboard.harvesting.datastructures.Format;
 import de.hitec.oaidashboard.harvesting.datastructures.HarvestedRecord;
 import de.hitec.oaidashboard.harvesting.datastructures.MethaIdStructure;
 import de.hitec.oaidashboard.harvesting.datastructures.MethaSet;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

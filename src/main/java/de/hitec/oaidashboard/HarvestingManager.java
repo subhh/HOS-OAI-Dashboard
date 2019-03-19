@@ -36,7 +36,7 @@ public class HarvestingManager {
 	
 	// Then, we will copy them here, and let git manage them.
 	// Also, the metha-id answer will be stored here. 
-//	private static final String GIT_DIRECTORY = "/data";
+    // private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
 	private static final boolean RESET_DATABASE = true;
 	// This flag is useless for production (must always be true),
@@ -174,21 +174,11 @@ public class HarvestingManager {
 		if (repositories != null) {
 
 		    NextStepsCaller nextStepsCaller = (repository, dataHarvester) -> {
-                nextSteps(repository, dataHarvester);
-            };
+                // From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
+                // Second Step: instatiation of model
+                DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
 
-			// First Step: MultiThreaded collection of data (Json, XML etc.)
-            Map<Repository, DataHarvester> repoHarvesterMap = harvestData(repositories, nextStepsCaller);
-
-			// From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
-/*			for(Map.Entry<Repository, DataHarvester> entry: repoHarvesterMap.entrySet()) {
-				Repository repository = entry.getKey();
-				DataHarvester dataHarvester = entry.getValue();
-
-				// Second Step: instatiation of model
-				DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
-
-				if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
+                if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
                     // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
                     DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
 
@@ -196,30 +186,17 @@ public class HarvestingManager {
                     dataModelCreator.validate();
                 }
 
-				// Fifth Step: Saving model to Database
-				dataModelCreator.saveDataModel();
-			}*/
+                // Fifth Step: Saving model to Database
+                dataModelCreator.saveDataModel();
+            };
+
+			// First Step: MultiThreaded collection of data (Json, XML etc.)
+            harvestData(repositories, nextStepsCaller);
 		} else {
 		    logger.info("No target repositories found in Database, doing nothing.");
         }
 		logger.info("Finished.");
 	}
-
-	private static void nextSteps(Repository repository, DataHarvester dataHarvester) {
-        // Second Step: instatiation of model
-        DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
-
-        if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
-            // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
-            DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
-
-            // Fourth Step: Validate against Hibernate/MySQL Schema + Custom Validation
-            dataModelCreator.validate();
-        }
-
-        // Fifth Step: Saving model to Database
-        dataModelCreator.saveDataModel();
-    }
 
 	private interface NextStepsCaller {
         void callNextStep(Repository repository, DataHarvester dataHarvester);
@@ -246,15 +223,12 @@ public class HarvestingManager {
 		}
 	}
 
-	private static Map<Repository, DataHarvester> harvestData(List<Repository> repositories, NextStepsCaller nextStepsCaller) {
-    	Map<Repository, DataHarvester> repoHarvesterMap = new HashMap<>();
-
+	private static void harvestData(List<Repository> repositories, NextStepsCaller nextStepsCaller) {
         Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
 
 		for(Repository repo : repositories) {
 			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID_PATH, METHA_SYNC_PATH,
 					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
-			repoHarvesterMap.put(repo, dataHarvester);
 			harvesterRepoMap.put(dataHarvester, repo);
 			dataHarvester.start();
 		}
@@ -275,7 +249,6 @@ public class HarvestingManager {
                 }
             }
         }
-		return repoHarvesterMap;
 	}
 }
 

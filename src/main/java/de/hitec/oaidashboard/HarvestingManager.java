@@ -41,7 +41,7 @@ public class HarvestingManager {
 	private static final boolean RESET_DATABASE = true;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static final boolean REHARVEST = false;
+	private static final boolean REHARVEST = true;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());

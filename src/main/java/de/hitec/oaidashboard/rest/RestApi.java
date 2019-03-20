@@ -33,6 +33,8 @@ public class RestApi {
     @Path("/ListRepos")
     @Produces(MediaType.APPLICATION_JSON)
     public String listRepos() throws IOException {
+        logger.info("REST-API called /ListRepos");
+
         List<Repository> repositories = getReposFromDB();
 
         ObjectMapper objectMapper = new ObjectMapper();
@@ -45,6 +47,8 @@ public class RestApi {
     @Produces(MediaType.APPLICATION_JSON)
     public String getStateAtTimePoint(@PathParam("repo_id") String repo_id,
                                       @PathParam("timepoint") String timepoint) throws IOException {
+        logger.info("REST-API called /GetStateAtTimePoint/{repo_id}/{timepoint} " +
+                "with params repo_id: '{}', timepoint: '{}'", repo_id, timepoint);
 
         int save_repo_id = Integer.parseInt(repo_id);
 
@@ -71,6 +75,10 @@ public class RestApi {
     public String getStatesAtTimeRange(@PathParam("repo_id") String repo_id,
                                        @PathParam("timepoint_from") String timepoint_from,
                                        @PathParam("timepoint_to") String timepoint_to) throws IOException {
+        logger.info("REST-API called /GetStateAtTimePoint/{repo_id}/{timepoint_from}/{timepoint_to} " +
+                "with params repo_id: '{}', timepoint_from: '{}', timepoint_to: '{}'",
+                repo_id, timepoint_from, timepoint_to);
+
         int save_repo_id = Integer.parseInt(repo_id);
 
         DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

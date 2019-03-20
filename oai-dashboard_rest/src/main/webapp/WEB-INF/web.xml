@@ -11,7 +11,7 @@
     <init-param>
       <!-- For Jersey 2.x -->
       <param-name>jersey.config.server.provider.packages</param-name>
-      <param-value>de.hitec.oaidashboard.rest</param-value>
+      <param-value>de.uni_hamburg.sub.oaidashboard.rest</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

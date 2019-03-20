@@ -4,12 +4,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.hitec.oaidashboard</groupId>
-  <artifactId>hitec-oai-dashboard</artifactId>
+  <groupId>de.uni_hamburg.sub.oaidashboard</groupId>
+  <artifactId>oai-dashboard_harvester</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 
-  <name>hitec-oai-dashboard Maven Webapp</name>
+  <name>oai-dashboard Harvester</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
@@ -77,7 +77,7 @@
   </dependencies>
 
   <build>
-    <finalName>hitec-oai-dashboard</finalName>
+    <finalName>oai-dashboard-harvester</finalName>
       <plugins>
           <plugin>
               <artifactId>maven-assembly-plugin</artifactId>
@@ -85,7 +85,7 @@
               <configuration>
                   <archive>
                       <manifest>
-                          <mainClass>de.hitec.oaidashboard.HarvestingManager</mainClass>
+                          <mainClass>de.uni_hamburg.sub.oaidashboard.HarvestingManager</mainClass>
                       </manifest>
                   </archive>
                   <descriptorRefs>

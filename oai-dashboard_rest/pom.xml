@@ -4,12 +4,12 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>de.hitec.oaidashboard</groupId>
+  <groupId>de.uni_hamburg.sub.oaidashboard</groupId>
   <artifactId>oai-dashboard_rest</artifactId>
   <version>0.1-SNAPSHOT</version>
   <packaging>war</packaging>
 
-  <name>hitec-oai-dashboard-rest Maven Webapp</name>
+  <name>oai-dashboard REST API</name>
   <!-- FIXME change it to the project's website -->
   <url>http://www.example.com</url>
 
@@ -64,14 +64,14 @@
       <version>3.8.1</version>
     </dependency>
     <dependency>
-      <groupId>de.hitec.oaidashboard</groupId>
-      <artifactId>hitec-oai-dashboard</artifactId>
+      <groupId>de.uni_hamburg.sub.oaidashboard</groupId>
+      <artifactId>oai-dashboard_harvester</artifactId>
       <version>0.1-SNAPSHOT</version>
     </dependency>
   </dependencies>
 
   <build>
-    <finalName>hitec-oai-dashboard-rest</finalName>
+    <finalName>oai-dashboard-rest</finalName>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
         <plugins>
             <plugin>

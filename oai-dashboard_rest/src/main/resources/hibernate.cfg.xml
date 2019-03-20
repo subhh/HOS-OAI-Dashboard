@@ -14,11 +14,11 @@
         <!--<property name = "hibernate.format_sql">true</property>-->
         <!--<property name = "hibernate.use_sql_comments">true</property>-->
 
-        <mapping class = "de.hitec.oaidashboard.database.datastructures.Repository" />
- 		<mapping class = "de.hitec.oaidashboard.database.datastructures.HarvestingState" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures.LicenceCount" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures.SetCount" />
-        <mapping class = "de.hitec.oaidashboard.database.datastructures.MetadataFormat" />
+        <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository" />
+ 		<mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState" />
+        <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount" />
+        <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.SetCount" />
+        <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.MetadataFormat" />
 
     </session-factory>
 </hibernate-configuration>

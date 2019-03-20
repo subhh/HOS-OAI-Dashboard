@@ -14,8 +14,8 @@ import java.util.Set;
 
 @NamedQueries({
         @NamedQuery(name="get_state_at_timepoint", query="from HarvestingState where repository_id = :repo_id " +
-                "AND timestamp >= :timepoint1 " +
-                "AND timestamp < :timepoint2"),
+                "AND timestamp >= :timepoint_from " +
+                "AND timestamp < :timepoint_to"),
 })
 public class HarvestingState {
 

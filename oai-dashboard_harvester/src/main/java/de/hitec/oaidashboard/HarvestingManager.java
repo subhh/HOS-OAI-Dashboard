@@ -4,6 +4,7 @@ import de.hitec.oaidashboard.aggregation.DataAggregator;
 import de.hitec.oaidashboard.database.DataModelCreator;
 import de.hitec.oaidashboard.database.datastructures.*;
 import de.hitec.oaidashboard.harvesting.DataHarvester;
+import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -38,10 +39,10 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here. 
     // private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static final boolean RESET_DATABASE = true;
+	private static boolean RESET_DATABASE = true;
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static final boolean REHARVEST = true;
+	private static boolean REHARVEST = true;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -168,6 +169,7 @@ public class HarvestingManager {
 	}
 
 	public static void main(String[] args) {
+    	parseCommandLine(args);
 		initDatabase();
 
 		List<Repository> repositories = getActiveReposFromDB();
@@ -198,7 +200,46 @@ public class HarvestingManager {
 		logger.info("Finished.");
 	}
 
-	private interface NextStepsCaller {
+    private static void parseCommandLine(String[] args) {
+        if(args.length > 0) {
+            logger.info("Parsing command line arguments");
+
+            CommandLine commandLine;
+            // TODO: remove this argument because it is dangerous in a production environment
+            Option reset_database_option = Option.builder("RESET")
+                    .required(false)
+                    .hasArg()
+                    .desc("Reset the database")
+                    .build();
+            // TODO: remove this argument because it is dangerous in a production environment
+            Option reharvest_option = Option.builder("REHARVEST")
+                    .required(false)
+                    .hasArg()
+                    .desc("Reharvest")
+                    .build();
+            Options options = new Options();
+            options.addOption(reset_database_option);
+            options.addOption(reharvest_option);
+            CommandLineParser parser = new DefaultParser();
+            try {
+                commandLine = parser.parse(options, args);
+                if(commandLine.hasOption("RESET")) {
+                    boolean reset_option_argument = Boolean.parseBoolean(commandLine.getOptionValue("RESET"));
+                    logger.info("Setting RESET_DATABASE to: {}", reset_option_argument);
+                    RESET_DATABASE = reset_option_argument;
+                }
+                if(commandLine.hasOption("REHARVEST")) {
+                    boolean reharvest_option_argument = Boolean.parseBoolean(commandLine.getOptionValue("REHARVEST"));
+                    logger.info("Setting REHARVEST to: {}", reharvest_option_argument);
+                    REHARVEST = reharvest_option_argument;
+                }
+            } catch (Exception e) {
+                logger.info("Error parsing command line options", e);
+            }
+        }
+    }
+
+    private interface NextStepsCaller {
         void callNextStep(Repository repository, DataHarvester dataHarvester);
     }
 

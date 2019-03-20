@@ -58,7 +58,10 @@ public class RestApi {
 
         HarvestingState state = getStateFromDB(save_repo_id, save_timepoint);
         ObjectMapper objectMapper = new ObjectMapper();
-        String json_state = objectMapper.writeValueAsString(state);
+        String json_state = "{}"; // by default return minimal valid json data
+        if(state != null) {
+            json_state = objectMapper.writeValueAsString(state);
+        }
         return json_state;
     }
 

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.uni_hamburg.sub.oaidashboard</groupId>
+  <artifactId>oai-dashboard-combines</artifactId>
+  <version>0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>oai-dashboard combined</name>
+  <description>Description</description>
+  <prerequisites>
+    <maven>3.2.2</maven>
+  </prerequisites>
+  <build>
+  </build>
+  <modules>
+    <module>oai-dashboard_harvester</module>
+    <module>oai-dashboard_rest</module>
+  </modules>
+</project>

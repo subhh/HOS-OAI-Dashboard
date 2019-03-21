@@ -3,7 +3,6 @@ package de.uni_hamburg.sub.oaidashboard.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -98,10 +97,14 @@ public class RestApi {
     }
 
     private HarvestingState getStateFromDB(int repo_id, Date timepoint) {
-        Date next_day = DateUtils.addDays(timepoint, 1);
         HarvestingState state = null;
-        List<HarvestingState> stateList = getStatesFromDB(repo_id, timepoint, next_day);
+        List<HarvestingState> stateList = getStatesFromDB(repo_id, timepoint, timepoint);
         if(stateList.size() > 0) {
+            /*
+            * Todo: what if we find multiple states?
+            * This corresponds to the question, what happens if we harvest the same repository twice
+            * As dicussed, the "current" State should then be marked...
+            */
             state = stateList.get(0);
         }
         return state;
@@ -112,7 +115,7 @@ public class RestApi {
         List<HarvestingState> stateList = new ArrayList<>();
 
         try {
-            stateList = session.createNamedQuery("get_state_at_timepoint", HarvestingState.class)
+            stateList = session.createNamedQuery("get_states_at_timerange", HarvestingState.class)
                     .setParameter("repo_id", repo_id)
                     .setParameter("timepoint_from", timepoint_from)
                     .setParameter("timepoint_to", timepoint_to)

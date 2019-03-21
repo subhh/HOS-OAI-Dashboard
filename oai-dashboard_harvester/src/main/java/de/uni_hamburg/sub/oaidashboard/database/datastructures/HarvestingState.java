@@ -11,9 +11,12 @@ import java.util.Set;
    uniqueConstraints = { @UniqueConstraint(columnNames = { "state_id" }) })
 
 @NamedQueries({
-        @NamedQuery(name="get_state_at_timepoint", query="from HarvestingState where repository_id = :repo_id " +
-                "AND timestamp >= :timepoint_from " +
-                "AND timestamp < :timepoint_to"),
+        /*
+        * "timestamp BETWEEN :timepoint_from AND DATE(:timepoint_to) + 1" equals
+        * "timestamp >= :timepoint AND timestamp < DATE(:timepoint) + 1"
+        */
+        @NamedQuery(name="get_states_at_timerange", query="from HarvestingState where repository_id = :repo_id " +
+                "AND timestamp BETWEEN :timepoint_from AND DATE(:timepoint_to) + 1"), // always add one day (+1) to the higher value for BETWEEN (timepoint_to)
 })
 public class HarvestingState {
 

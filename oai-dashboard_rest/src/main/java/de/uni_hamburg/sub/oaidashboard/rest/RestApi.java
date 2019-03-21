@@ -111,7 +111,8 @@ public class RestApi {
     }
 
     private List<HarvestingState> getStatesFromDB(int repo_id, Date timepoint_from, Date timepoint_to) {
-        Session session = getSessionFactory().openSession();
+        SessionFactory factory = getSessionFactory();
+        Session session = factory.openSession();
         List<HarvestingState> stateList = new ArrayList<>();
 
         try {
@@ -127,13 +128,14 @@ public class RestApi {
             e.printStackTrace();
         } finally {
             session.close();
+            factory.close();
         }
         return stateList;
     }
 
     private List<Repository> getReposFromDB() {
-
-        Session session = getSessionFactory().openSession();
+        SessionFactory factory = getSessionFactory();
+        Session session = factory.openSession();
         List<Repository> repositories = null;
 
         try {
@@ -143,6 +145,7 @@ public class RestApi {
             e.printStackTrace();
         } finally {
             session.close();
+            factory.close();
         }
         return repositories;
     }

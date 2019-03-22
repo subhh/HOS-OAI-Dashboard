@@ -32,8 +32,11 @@ import java.util.*;
 public class HarvestingManager {
 
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
-	private static final String METHA_ID_PATH = "/usr/sbin/metha-id";
-	private static final String METHA_SYNC_PATH = "/usr/sbin/metha-sync";
+	private static final String METHA_PATH = "/home/user/go/bin/";
+	// private static final String METHA_PATH = "/usr/sbin/";
+
+	private static final String METHA_ID = METHA_PATH + "metha-id";
+	private static final String METHA_SYNC = METHA_PATH + "metha-sync";
 	
 	// Here, metha-sync will place it's files (*.xml.gz) 
 	private static final String EXPORT_DIRECTORY = "/tmp/harvest";
@@ -271,7 +274,7 @@ public class HarvestingManager {
         Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
 
 		for(Repository repo : repositories) {
-			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID_PATH, METHA_SYNC_PATH,
+			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID, METHA_SYNC,
 					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			harvesterRepoMap.put(dataHarvester, repo);
 			dataHarvester.start();

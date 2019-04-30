@@ -17,18 +17,25 @@ Install:
 - `maven clean install`
 
 oai-dashboard_harvester: creates a standalone JAR-file
+oai-dashboard_rest: creates a standalone WAR-file
 
-## Configuration
+## Configuration (harvester)
 - Configure the MySQL database:
  - set character-set/collation to specific utf8 (case/accent-insensitive) (for example --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs)
  - database schema is automatically configured by hibernate
  - create a database 
 - resources/hibernate.cfg.xml: Configuration of the database
 
-## Running
+## Configuration (REST-API)
+- resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical)
+
+## Running (harvester)
 Parameters:
 - `-RESET true/false` -> resets the database, for development only
 - `-REHARVEST true/false`-> restarts harvesting. Harvesting is done automatically when no data is found.
 harvesting sould be run every day
+
+## Running (REST-API)
+- place the WAR-file as output of the build process in the appropriate tomcat folder
 
 

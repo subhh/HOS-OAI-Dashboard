@@ -25,6 +25,7 @@ oai-dashboard_rest: creates a standalone WAR-file
  - database schema is automatically configured by hibernate
  - create a database 
 - resources/hibernate.cfg.xml: Configuration of the database
+- create folders (currently hardcoded): `/tmp/harvest` and `/tmp/oai_git`
 
 ## Configuration (REST-API)
 - resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical)
@@ -37,5 +38,14 @@ harvesting sould be run every day
 
 ## Running (REST-API)
 - place the WAR-file as output of the build process in the appropriate tomcat folder
+- test the general functionality of the REST-API:
+ - `{IP:PORT of Tomcat}/oai-dashboard-rest`
+- test the REST-API-Endpoints:
+ - List all repositories:
+  - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/ListRepos`
+ - Get (Harvesting-)State at specific timepoint:
+  - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/GetStateAtTimePoint/{REPOSITORY_ID}/{DATE}` Date-Format: YYYY-MM-DD
+ - Get States for a specific time range:
+ - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/GetStatesAtTimeRange/{REPOSITORY_ID}/{FROM_DATE}/{TO_DATE}`
 
 

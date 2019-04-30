@@ -53,3 +53,5 @@ harvesting sould be run every day
 ## Using the docker-compose for fast install:
 If you have installed docker and docker-compose, you can use the command `docker-compose up` when in the directory `oai-dashboard_rest/docker` which will automatically create two containers with appropriate settings, one for MySQL and one for Tomcat. The maven build will automatically copy the resulting WAR-file of oai-dashboard_rest into the correct Tomcat folder.
 
+With docker compose the `{IP:PORT of Tomcat}` equals `127.0.0.1` or `localhost` (linux/ubuntu) to access the REST-API (for example: `127.0.0.1/oai-dashboard-rest/rest/api/ListRepos`)
+

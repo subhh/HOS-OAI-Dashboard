@@ -5,12 +5,14 @@ Dashboard presentation of OAI repository key data (in early development)
 Dependencies: 
 - Linux OS (e.g. Ubuntu 18)
 - [Metha](https://github.com/miku/metha) 0.1.42 or later
-- [Docker](https://www.docker.com/), latest version, only if you want to use docker for services like the database
 - [MySQL](https://www.mysql.com/), 8.0 or later
 - [Apache Tomcat](https://tomcat.apache.org/) 8.5 or later
 - [Java OpenJDK](http://openjdk.java.net/) 1.8 or later
 - [Maven](https://maven.apache.org/) 4.15 or later
 - Git client
+- Optional (only if you want to use docker for MySQL and Tomcat):
+  - [Docker](https://www.docker.com/), latest version,
+  - [Docker Compose](https://docs.docker.com/compose/), latest version
 
 Install:
 - clone from GitHub
@@ -48,4 +50,6 @@ harvesting sould be run every day
   - Get States for a specific time range:
     - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/GetStatesAtTimeRange/{REPOSITORY_ID}/{FROM_DATE}/{TO_DATE}`
 
+## Using the docker-compose for fast install:
+If you have installed docker and docker-compose, you can use the command `docker-compose up` when in the directory `oai-dashboard_rest/docker` which will automatically create two containers with appropriate settings, one for MySQL and one for Tomcat. The maven build will automatically copy the resulting WAR-file of oai-dashboard_rest into the correct Tomcat folder.
 

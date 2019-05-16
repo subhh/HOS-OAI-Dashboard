@@ -23,7 +23,9 @@ oai-dashboard_rest: creates a standalone WAR-file
 
 ### installation notes (Ubuntu 18)
 You'll find the MySQL 8 apt repository here: https://dev.mysql.com/downloads/repo/apt/ 
+
 `sudo dpkg -i <filename>`
+
 install MySQL 8.x via apt.
 
 EXCEPT FOR LINK TO APT REPOSITORY you may use this installation guide:

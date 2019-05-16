@@ -21,6 +21,15 @@ Install:
 oai-dashboard_harvester: creates a standalone JAR-file
 oai-dashboard_rest: creates a standalone WAR-file
 
+### installation notes (Ubuntu 18)
+You'll find the MySQL 8 apt repository here: https://dev.mysql.com/downloads/repo/apt/ 
+`sudo dpkg -i <filename>`
+install MySQL 8.x via apt.
+
+EXCEPT FOR LINK TO APT REPOSITORY you may use this installation guide:
+https://www.tecmint.com/install-mysql-8-in-ubuntu/
+  
+
 ## Configuration (harvester)
 - Configure the MySQL database:
   - set character-set/collation to specific utf8 (case/accent-insensitive) (for example --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs)

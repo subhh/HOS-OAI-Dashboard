@@ -8,7 +8,7 @@ Dependencies:
 - [MySQL](https://www.mysql.com/), 8.0 or later
 - [Apache Tomcat](https://tomcat.apache.org/) 8.5 or later
 - [Java OpenJDK](http://openjdk.java.net/) 1.8 or later
-- [Maven](https://maven.apache.org/) 4.15 or later
+- [Maven](https://maven.apache.org/) 3.6.0 or later
 - Git client
 - Optional (only if you want to use docker for MySQL and Tomcat):
   - [Docker](https://www.docker.com/), latest version,

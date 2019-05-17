@@ -16,12 +16,18 @@ Dependencies:
 
 Install:
 - clone from GitHub
-- `maven clean install`
+- `mvn clean install`
 
 oai-dashboard_harvester: creates a standalone JAR-file
 oai-dashboard_rest: creates a standalone WAR-file
 
-### installation notes (Ubuntu 18)
+### Installation notes (Ubuntu 18)
+#### Metha
+You can download the deb-Package from the sourceforge repository  and install it with
+`sudo dpkg -i <filename>`
+This way is easier than the source installation.
+
+#### MySQL
 You'll find the MySQL 8 apt repository here: https://dev.mysql.com/downloads/repo/apt/ 
 
 `sudo dpkg -i <filename>`
@@ -31,6 +37,8 @@ install MySQL 8.x via apt.
 EXCEPT FOR LINK TO APT REPOSITORY you may use this installation guide:
 https://www.tecmint.com/install-mysql-8-in-ubuntu/
   
+#### Tomcat, Java, Git, Maven
+These packages can be installed via apt.
 
 ## Configuration (harvester)
 - Configure the MySQL database:

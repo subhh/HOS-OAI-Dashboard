@@ -25,8 +25,17 @@ import org.hibernate.tool.schema.TargetType;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
+
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.*;
 
 public class HarvestingManager {
@@ -44,11 +53,19 @@ public class HarvestingManager {
 	// Then, we will copy them here, and let git manage them.
 	// Also, the metha-id answer will be stored here. 
     // private static final String GIT_DIRECTORY = "/data";
-	private static final String GIT_DIRECTORY = "/tmp/oai_git";
-	private static boolean RESET_DATABASE = true;
+	private static final String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
+	private static boolean RESET_DATABASE = false;
+	
+	// If the schema of the datadase should change, it's
+	// necessary to delete the database first based on the old schema.
+	private static final boolean DELETE_ONLY_DATABASE = false;
+
+	// always set REHARVEST to false to use this.
+	private static final boolean RESTORE_DB_FROM_GIT = true;
+
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static boolean REHARVEST = true;
+	private static boolean REHARVEST = false;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -137,10 +154,13 @@ public class HarvestingManager {
 	private static void resetDatabase(SchemaExport export, Metadata metadata) {
 		logger.info("Dropping all tables of database...");
 		dropDataBase(export, metadata);
-		logger.info("Creating all tables  Database...");
-		createDataBase(export, metadata);
-		logger.info("Setting up default repositories...");
-		setUpDefaultRepositories();
+    	if (!DELETE_ONLY_DATABASE)
+    	{
+    		logger.info("Creating all tables  Database...");
+    		createDataBase(export, metadata);
+    		logger.info("Setting up default repositories...");
+    		setUpDefaultRepositories();
+    	}
 	}
 
 	private static void initDatabase() {
@@ -152,7 +172,7 @@ public class HarvestingManager {
 				.getMetadataBuilder().build();
 		SchemaExport export = getSchemaExport();
 
-		// init buildSessionFactory
+		// buildSessionFactory
 		try {
 			factory = metadata.buildSessionFactory();
 		} catch (Throwable ex) {
@@ -177,16 +197,115 @@ public class HarvestingManager {
 	public static void main(String[] args) {
     	parseCommandLine(args);
 		initDatabase();
-
+		if (DELETE_ONLY_DATABASE) {
+			return;
+	    }
 		List<Repository> repositories = getActiveReposFromDB();
+		resetGitDirectory();
+		initDirectories();
+		if (!REHARVEST) {			
+			harvestFromGit(repositories);
+		} else {
+			doHarvest(repositories, null);
+		}
+		logger.info("Finished.");
+	}
+
+    private static void harvestFromGit(List<Repository> repositories) {
+	    Hashtable<String, Set<Repository>> gitTags = null;
+		gitTags = queryGitTags(repositories);
+		// It is necessary to restore latest setting before following checkout,
+		// as the checkout command does not 
+		// restore files which git assumes to be unchanged
+		for (Repository repo : repositories) {
+			try {
+				String methaUrlString = (String) File.separator 
+		    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+		    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+    	  		    		
+	        	ProcessBuilder pb = new ProcessBuilder("git", "checkout", "--", "*");        	
+	    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+	    		Process p = pb.start();
+	    		p.waitFor();
+			}
+			catch (IOException e) {
+				System.err.println("Caught IOException: " + e.getMessage());
+			}
+			catch (InterruptedException e) {
+				System.err.println("Caught InterruptedException: " + e.getMessage());
+			}
+		}
+		if (gitTags.size() == 1 && gitTags.containsKey("-- *")) {
+			// shortcut meanly meant for debugging. Beware of null setting for timestamp. 
+			doHarvest(repositories, null);
+		} else {
+			Set<String> keySet = gitTags.keySet();
+			for (String key : keySet) {				
+				Set<Repository> repos = gitTags.get(key);
+				Timestamp stateTimestamp = null;
+				for (Repository repo : repos) {
+					try {
+						// the 'tag' we stored in the hashtable is a shortcut, we have to find
+						// the corresponding complete tag (with minutes, seconds, ...).
+						// If more than one tag matches, take only the last one.
+						BufferedReader br;
+						String methaUrlString = (String) File.separator 
+				    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+				    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+		    	  		    		
+			        	ProcessBuilder pb = new ProcessBuilder("git", "-P", "tag", "-l", key+"*" );        	
+			    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+			    		Process p = pb.start();
+			    		p.waitFor();
+			            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+				        String line = null;
+				        String tag = null;
+			            while((line = br.readLine()) != null) {
+			            	// A tag usually is an isodate like "2019-04-16_09-40-06.888849".
+			            	// The key used above is only the first part, like "2019-04-16_09"+'*'
+			            	// i.e. the date, including the hour, and we want to find the whole tag
+			            	tag = line.trim();
+			                logger.info(line);
+			            }
+			            // Within 'queryGitTags' we just queried for tags, found one and stored it's 
+			            // abbreviation. Now a tag corresponding to the abbrev. should still be there.
+		            	assert (tag != null);
+		            	pb = new ProcessBuilder("git", "checkout", tag);        	
+		            	pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+		            	p = pb.start();		
+		            	p.waitFor();
+		            	// splits tag "YYYY-MM-DD_hh-mm-ss.xxxxx" into "YYYY-MM-DD" and "hh-mm-ss.xxxxx"
+		        		String[] tagParts = tag.split("_");
+		        		// changes "hh-mm-ss.xxxxx" into "hh:mm:ss.xxxxx"
+		        		// and concatenates both parts to "YYYY-MM-DD hh:mm:ss.xxxxx"
+		        		stateTimestamp = Timestamp.valueOf(tagParts[0] + " " + tagParts[1].replace("-", ":"));
+					}
+					catch (IOException e) {
+						System.err.println("Caught IOException: " + e.getMessage());
+					}
+					catch (InterruptedException e) {
+						System.err.println("Caught InterruptedException: " + e.getMessage());
+					}
+				}
+				doHarvest(new ArrayList<Repository>(repos), stateTimestamp);
+			}
+		}
+		
+	}
+
+	private static void doHarvest(List<Repository> repositories, Timestamp stateTimestamp) {
 		if (repositories != null) {
 
 		    NextStepsCaller nextStepsCaller = (repository, dataHarvester) -> {
-                // From here, everything needs to be Single-Threaded in relation to each Repository:DataHarvester or Repository:HarvestingDataModel pair
-                // Second Step: instatiation of model
-                DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory);
+                // From here, everything needs to be Single-Threaded in relation to each
+		    	// Repository:DataHarvester or Repository:HarvestingDataModel pair
+                // Second Step: instantiation of model
+                DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory,
+                		REHARVEST, stateTimestamp);
 
                 if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
+                	
                     // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
                     DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
 
@@ -198,15 +317,106 @@ public class HarvestingManager {
                 dataModelCreator.saveDataModel();
             };
 
-			// First Step: MultiThreaded collection of data (Json, XML etc.)
+			// First Step: MultiThreaded collection of data (Json, XML etc.)            
             harvestData(repositories, nextStepsCaller);
 		} else {
 		    logger.info("No target repositories found in Database, doing nothing.");
         }
-		logger.info("Finished.");
 	}
 
-    private static void parseCommandLine(String[] args) {
+	private static Hashtable queryGitTags(List<Repository> repositories) {
+    	// restores the complete DB from git repository, if flag RESTORE_DB_FROM_GIT 
+    	// is true, otherwise take only datasets from the latest harvest run.  
+    	Hashtable<String, Set<Repository>> gitTags = new Hashtable<String, Set<Repository>>();
+    	
+		for(Repository repo : repositories) {
+
+			if (RESTORE_DB_FROM_GIT) {  
+				BufferedReader br;
+				try {
+					String methaUrlString = (String) File.separator 
+			    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+			    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+
+		        	ProcessBuilder pb = new ProcessBuilder("git", "-P", "tag");        	
+		    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+		    		Process p = pb.start();
+		    		p.waitFor();
+		            br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+			        String line = null;
+		            while((line = br.readLine()) != null) {
+		            	// a tag usually is an isodate like "2019-04-16_09-40-06.888849"
+		            	// we are only interested in the first part, like "2019-04-16_09"
+		            	// i.e. the date, including the hour.
+		            	String tag = line.trim().substring(0, 13);
+		            	Set<Repository> tempRepoSet;
+		            	if (gitTags.containsKey(tag)) {
+		            		tempRepoSet = gitTags.get(tag);
+		            		tempRepoSet.add(repo);            		            		
+		            	} else {
+		            		tempRepoSet = new HashSet<Repository>(Arrays.asList(repo));
+		            	}
+		            	gitTags.put(tag, tempRepoSet);
+		                logger.info(line);
+		            }            
+				}
+				catch (IOException e) {
+					System.err.println("Caught IOException: " + e.getMessage());
+				}
+				catch (InterruptedException e) {
+					System.err.println("Caught InterruptedException: " + e.getMessage());
+				}
+            }
+			else {
+				// this is supposed to work as debugging solution
+				gitTags.put("-- *", new HashSet<Repository>(Arrays.asList(repo)));
+			}
+    	}
+    	return gitTags;		
+	}
+
+	private static void initDirectories() {
+    	
+    	String[] dirs = {GIT_PARENT_DIRECTORY, EXPORT_DIRECTORY};
+    	for (String dir : dirs)
+    	{
+        	File d = new File(dir);
+        	if ( !d.exists() )
+        	{
+        		d.mkdir();
+        	}
+    	}
+    }
+
+	private static void resetGitDirectory() {
+		// The harvested records are supposed to be collected in a git repository.
+		// Each harvested state should be stored, and under normal circumstances 
+		// the harvest process will overwrite all existing files within the git directory,
+		// which is the desired behavior. However, in order to ensure that i.e. in
+		// case of a failed harvesting run older files will not interfere with currently
+		// harvested files, it is necessary to delete all older files in the
+		// git directory before starting a new harvest run.
+		
+		try
+		{
+			if (Files.exists(FileSystems.getDefault().getPath(GIT_PARENT_DIRECTORY)))
+			{
+				Files.walk(FileSystems.getDefault().getPath(GIT_PARENT_DIRECTORY))
+				.sorted(Comparator.reverseOrder())
+				.filter(p -> !p.toString().contains(".git"))
+				.map(Path::toFile)
+				.forEach(File::delete);
+			}
+		}
+		catch (IOException ioex)
+		{
+			logger.error("Failed to clear harvesting directories! Will continue anyhow.");
+		}		
+	}
+
+	private static void parseCommandLine(String[] args)
+	{
         if(args.length > 0) {
             logger.info("Parsing command line arguments");
 
@@ -270,12 +480,13 @@ public class HarvestingManager {
 		}
 	}
 
+	
 	private static void harvestData(List<Repository> repositories, NextStepsCaller nextStepsCaller) {
         Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
-
+        
 		for(Repository repo : repositories) {
 			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID, METHA_SYNC,
-					GIT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
+					GIT_PARENT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			harvesterRepoMap.put(dataHarvester, repo);
 			dataHarvester.start();
 		}
@@ -283,6 +494,7 @@ public class HarvestingManager {
 
 		Set<DataHarvester> unfinishedHarvesters = new HashSet<>(harvesterRepoMap.keySet());
 		while(unfinishedHarvesters.size() > 0) {
+			logger.info("unfinishedHarvestersSize: " + unfinishedHarvesters.size());
 		    for(DataHarvester dataHarvester: new HashSet<>(unfinishedHarvesters)) {
 		        try {
                     if(dataHarvester.success || dataHarvester.t.isInterrupted()) {
@@ -290,7 +502,7 @@ public class HarvestingManager {
                         unfinishedHarvesters.remove(dataHarvester);
                         nextStepsCaller.callNextStep(harvesterRepoMap.get(dataHarvester), dataHarvester);
                     }
-                    Thread.sleep(100);
+                    Thread.sleep(5000);
                 } catch(Exception e) {
                     logger.error("An error occurred while harvesting data from Harvesting-URL: {}", dataHarvester.getHarvestingURL(), e);
                     unfinishedHarvesters.remove(dataHarvester);

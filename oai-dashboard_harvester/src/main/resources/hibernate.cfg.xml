@@ -6,19 +6,9 @@
         <property name = "hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
         <property name = "hibernate.dialect.storage_engine">innodb</property> 
         <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
-        <property name = "hibernate.connection.username">root</property>
-        <property name = "hibernate.connection.password">rootaccountpassword</property>
-        <property name = "hibernate.connection.url">jdbc:mysql://localhost/test</property>
-
-
-  <!--  <property name = "hibernate.connection.username">example_db_user</property>
+        <property name = "hibernate.connection.username">example_db_user</property>
         <property name = "hibernate.connection.password">example_db_pass</property>
-        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8</property> -->
-        <!-- <property name = "hibernate.connection.url">jdbc:mysql://db:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8</property> -->
-
-        <!--<property name = "hibernate.show_sql">true</property>-->
-        <!--<property name = "hibernate.format_sql">true</property>-->
-        <!--<property name = "hibernate.use_sql_comments">true</property>-->
+        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8</property>
 
         <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository" />
  		<mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState" />

@@ -41,8 +41,7 @@ import java.util.*;
 public class HarvestingManager {
 
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
-	private static final String METHA_PATH = "/home/user/go/bin/";
-	// private static final String METHA_PATH = "/usr/sbin/";
+	private static final String METHA_PATH = "/usr/sbin/";
 
 	private static final String METHA_ID = METHA_PATH + "metha-id";
 	private static final String METHA_SYNC = METHA_PATH + "metha-sync";
@@ -54,18 +53,18 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here. 
     // private static final String GIT_DIRECTORY = "/data";
 	private static final String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
-	private static boolean RESET_DATABASE = false;
+	private static boolean RESET_DATABASE = true;
 	
 	// If the schema of the datadase should change, it's
 	// necessary to delete the database first based on the old schema.
 	private static final boolean DELETE_ONLY_DATABASE = false;
 
 	// always set REHARVEST to false to use this.
-	private static final boolean RESTORE_DB_FROM_GIT = true;
+	private static final boolean RESTORE_DB_FROM_GIT = false;
 
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static boolean REHARVEST = false;
+	private static boolean REHARVEST = true;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());

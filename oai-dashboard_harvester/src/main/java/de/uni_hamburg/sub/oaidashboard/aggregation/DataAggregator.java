@@ -56,7 +56,7 @@ public class DataAggregator {
 
     private void countRecordsForLicences() {
         Map<String, Long> countMap = countStrings(dataModel.getHarvestedRecords().stream().
-                map(harvestedRecord -> harvestedRecord.rights).
+                map(harvestedRecord -> harvestedRecord.rightsList.get(0)).
                 collect(Collectors.toList()));
 
         for (LicenceCount licenceCount : dataModel.getState().getLicenceCounts()) {

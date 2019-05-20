@@ -12,6 +12,7 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
+import java.io.File;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Calendar;
@@ -25,6 +26,7 @@ public class DataModelCreator {
     private final Repository repository;
     private final DataHarvester dataHarvester;
     private final SessionFactory factory;
+    public Timestamp stateTimestamp = null;
 
     private HarvestingState state = null;
 
@@ -32,7 +34,8 @@ public class DataModelCreator {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public DataModelCreator(Repository repository, DataHarvester dataHarvester, SessionFactory factory) {
+    public DataModelCreator(Repository repository, DataHarvester dataHarvester, 
+    		SessionFactory factory, boolean REHARVEST, Timestamp stateTimestamp) {
 
         this.repository = repository;
         this.dataHarvester = dataHarvester;
@@ -40,13 +43,44 @@ public class DataModelCreator {
 
         this.harvestedRecords = dataHarvester.getRecords();
 
-        initDataModel();
+        initDataModel(REHARVEST, stateTimestamp);
     }
 
-    private void initDataModel() {
+    public void addCommitGit(String tag, String gitDirectory)
+    {
+    	try {
+    		ProcessBuilder pb = new ProcessBuilder();
+    		pb.command("git", "add", ".");
+    		pb.directory(new File(gitDirectory));
+    		Process addGit = pb.start();
+    		addGit.waitFor();
+    		pb.command("git", "commit", "-m", tag);
+    		Process commitGit = pb.start();
+    		commitGit.waitFor();
+    		// git tags must not contain spaces or colons:
+    		tag = tag.replace(" ", "_");
+    		tag = tag.replace(":", "-");
+    		pb.command("git", "tag", tag);
+    		Process tagGit = pb.start();
+    		tagGit.waitFor();
+    		logger.info("Stored harvested records into git: {}");
+    	}
+    	catch (Exception e) {
+    		logger.error("Error while storing harvested records into git: {}", e);
+    	}
+    }
 
-        this.state = new HarvestingState(Timestamp.valueOf(LocalDateTime.now()), repository, HarvestingStatus.SUCCESS);
+    private void initDataModel(boolean REHARVEST, Timestamp stateTimestamp) {
+    	
+    	if (stateTimestamp == null) {
+    		stateTimestamp = Timestamp.valueOf(LocalDateTime.now());
+    	}
 
+        this.state = new HarvestingState(stateTimestamp, repository, HarvestingStatus.SUCCESS);
+    	
+        if (REHARVEST) { // Save harvested records to git:        	
+        	addCommitGit(stateTimestamp.toString(), dataHarvester.getGitDirectory());
+        }
         try {
             // convert all Data (raw) to Java/Hibernate-DataModel
             Set<LicenceCount> licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
@@ -73,7 +107,7 @@ public class DataModelCreator {
         logger.info("Creating LicenceCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
 
         Set<String> licences_raw = recordsRaw.stream().
-                map(harvestedRecord -> harvestedRecord.rights).
+                map(harvestedRecord -> harvestedRecord.rightsList.get(0)).
                 collect(Collectors.toSet());
 
         Set<LicenceCount> licenceCounts = licences_raw.stream().

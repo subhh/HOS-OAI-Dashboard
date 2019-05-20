@@ -29,24 +29,29 @@ public class XmlParser {
 	public ArrayList<HarvestedRecord> getRecords(Path input_filepath, Path output_filepath) throws Exception
 	{
 		ArrayList<HarvestedRecord> records = new ArrayList<HarvestedRecord>();
-		
-		InputStream is = new GZIPInputStream(Files.newInputStream(input_filepath));
-
-		// get rid of '.gz':
-		int index = input_filepath.getFileName().toString().lastIndexOf("."); 
-		String outputFilename = input_filepath.getFileName().toString().substring(0, index);
-		
-		File file = new File(output_filepath.toString() + File.separator + outputFilename);
-		OutputStream outputStream = new FileOutputStream(file, false);
-		TeeInputStream tis = new TeeInputStream(is, outputStream, true);
-//		IOUtils.copy(is, outputStream);
-//		outputStream.close();
+		InputStream is = null;
+		TeeInputStream tis = null;
+		if (output_filepath != null) {
+			is = new GZIPInputStream(Files.newInputStream(input_filepath));
+			// get rid of preceding date:
+			int index1 = (input_filepath.getFileName().toString().lastIndexOf("-") + 1); 
+			// get rid of '.gz':
+			int index2 = input_filepath.getFileName().toString().lastIndexOf("."); 
+			String outputFilename = input_filepath.getFileName().toString().substring(index1, index2);
+			
+			File file = new File(output_filepath.toString() + File.separator + outputFilename);
+			OutputStream outputStream = new FileOutputStream(file, false);
+			tis = new TeeInputStream(is, outputStream, true);
+		}
+		else {
+			is = Files.newInputStream(input_filepath);		
+		}
 		
 		try {
             // First, create a new XMLInputFactory
             XMLInputFactory inputFactory = XMLInputFactory.newInstance();
             // Setup a new eventReader
-            XMLEventReader eventReader = inputFactory.createXMLEventReader(tis);
+            XMLEventReader eventReader = inputFactory.createXMLEventReader((output_filepath != null) ? tis : is);
             // read the XML document
             HarvestedRecord record = null;
             StartElement startElement = null;
@@ -143,7 +148,7 @@ public class XmlParser {
                                                         if (startElement.getName().getLocalPart().equals(RIGHTS)) {
 
                                                         	event = eventReader.nextEvent();
-                                                            record.rights = event.asCharacters().getData();
+                                                            record.rightsList.add((String) event.asCharacters().getData());
                                                             continue;
                                                         }
                                                     }
@@ -151,6 +156,10 @@ public class XmlParser {
                                             }
                                         }
                                     }
+                            		if (record.rightsList.isEmpty())
+                            		{
+                            			record.rightsList.add("NO_RIGHTS");
+                            		}
                                 }
                             }
                         }

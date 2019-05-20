@@ -59,15 +59,9 @@ harvesting sould be run every day
 
 ## Running (REST-API)
 - place the WAR-file as output of the build process in the appropriate tomcat folder
+- See the automatically generated documentation of the API: `{IP:PORT of Tomcat}/oai-dashboard-rest`
 - test the general functionality of the REST-API:
-  - `{IP:PORT of Tomcat}/oai-dashboard-rest`
-- test the REST-API-Endpoints:
-  - List all repositories:
-    - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/ListRepos`
-  - Get (Harvesting-)State at specific timepoint:
-    - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/GetStateAtTimePoint/{REPOSITORY_ID}/{DATE}` Date-Format: YYYY-MM-DD
-  - Get States for a specific time range:
-    - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api/GetStatesAtTimeRange/{REPOSITORY_ID}/{FROM_DATE}/{TO_DATE}`
+  - `{IP:PORT of Tomcat}/oai-dashboard-rest/rest/api...`
 
 ## Using the docker-compose for fast install:
 If you have installed docker and docker-compose, you can use the command `docker-compose up` when in the directory `oai-dashboard_rest/docker` which will automatically create two containers with appropriate settings, one for MySQL and one for Tomcat. The maven build will automatically copy the resulting WAR-file of oai-dashboard_rest into the correct Tomcat folder.

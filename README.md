@@ -46,6 +46,14 @@ These packages can be installed via apt.
   - database schema is automatically configured by hibernate
   - create a database 
 - resources/hibernate.cfg.xml: Configuration of the database
+- Configuration of specific settings via harvester.properties:
+  - the properties-file "harvester.properties" is expected in the users home directory `~/.oai-dashboard`
+  - current properties are:
+    - harvester.metha.path
+    - harvester.export.dir
+    - harvester.git.persistence.dir
+    - ...
+  - example properties-file can be found in `src/main/resources/harvester.properties_example`
 - create folders (currently hardcoded): `/tmp/harvest` and `/tmp/oai_git`
 - Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
 

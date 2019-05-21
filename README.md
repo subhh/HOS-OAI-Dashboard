@@ -54,7 +54,6 @@ These packages can be installed via apt.
     - harvester.git.persistence.dir
     - ...
   - example properties-file can be found in `src/main/resources/harvester.properties_example`
-- create folders (currently hardcoded): `/tmp/harvest` and `/tmp/oai_git`
 - Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
 
 ## Configuration (REST-API)

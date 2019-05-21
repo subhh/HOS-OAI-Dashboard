@@ -49,7 +49,7 @@ These packages can be installed via apt.
 - create folders (currently hardcoded): `/tmp/harvest` and `/tmp/oai_git`
 
 ## Configuration (REST-API)
-- resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical)
+- resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical, except when the access to the database is different from the server running tomcat, i.e. docker-compose)
 
 ## Running (harvester)
 Parameters:

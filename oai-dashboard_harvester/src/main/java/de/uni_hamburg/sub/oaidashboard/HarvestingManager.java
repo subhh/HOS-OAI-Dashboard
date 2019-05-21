@@ -38,7 +38,8 @@ import java.util.*;
 public class HarvestingManager {
 
 	private static final String CONF_DIR = ".oai-dashboard";
-	private static final String CONF_FILENAME = "harvester.properties";
+	private static final String CONF_FILENAME_PROPERTIES = "harvester.properties";
+	private static final String CONF_FILENAME_HIBERNATE = "hibernate.cfg.xml";
 
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
 	private static String METHA_PATH = "/usr/sbin/";
@@ -162,9 +163,30 @@ public class HarvestingManager {
     	}
 	}
 
+	private static File loadHibernateConfigFromDirectory() {
+		File configFile = null;
+		File dir = new File(System.getProperty("user.home") + "/" + CONF_DIR);
+		File file = new File(dir.toString() + "/" + CONF_FILENAME_HIBERNATE);
+		if(dir.isDirectory()) {
+			if(file.isFile()) {
+				configFile = file;
+			} else {
+				logger.info("hibernate configuration file does not exist: " + file.toString());
+			}
+		} else {
+			logger.info("configuration directory does not exist: " + dir.toString());
+		}
+		if(configFile != null) {
+			logger.info("loaded hibernate configuration from: " + configFile.toString());
+		} else {
+			logger.info("failed to load hibernate configuration from: " + file.toString() + " reverting to default configuration file (classpath)");
+		}
+		return configFile;
+	}
+
 	private static void readConfigFromProperties() {
 		File dir = new File(System.getProperty("user.home") + "/" + CONF_DIR);
-		File file = new File(dir.toString() + "/" + CONF_FILENAME);
+		File file = new File(dir.toString() + "/" + CONF_FILENAME_PROPERTIES);
 		if(dir.isDirectory()) {
 			if(file.isFile()) {
 				logger.info("loaded configuration from: " + file.toString());
@@ -187,9 +209,15 @@ public class HarvestingManager {
 
 	private static void initDatabase() {
 		// read config and create necessary objects
-		String configFileName = "hibernate.cfg.xml";
-		ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.configure(configFileName).build();
+		ServiceRegistry serviceRegistry;
+		File configFile = loadHibernateConfigFromDirectory();
+		if(configFile != null) {
+			serviceRegistry = new StandardServiceRegistryBuilder()
+					.configure(configFile).build();
+		} else {
+			serviceRegistry = new StandardServiceRegistryBuilder()
+					.configure(CONF_FILENAME_HIBERNATE).build();
+		}
 		Metadata metadata = new MetadataSources(serviceRegistry)
 				.getMetadataBuilder().build();
 		SchemaExport export = getSchemaExport();

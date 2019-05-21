@@ -1,0 +1,7 @@
+# EXAMPLE FILE!
+# TO BE COPIED TO THE HOME DIRECTORY OF THE USER THAT WILL RUN THE HARVESTER INTO
+# THE FOLDER ".oai-dashboard" (~/.oai-dashboard) AS "harvester.properties"
+
+harvester.metha.path=/usr/sbin/
+harvester.export.dir=/tmp/harvest
+harvester.git.persistence.dir=/tmp/oai_git

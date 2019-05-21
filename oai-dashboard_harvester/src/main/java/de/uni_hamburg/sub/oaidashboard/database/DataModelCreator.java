@@ -86,12 +86,14 @@ public class DataModelCreator {
             Set<LicenceCount> licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
             Set<SetCount> setCounts = createSetCounts(dataHarvester.getSets(), state);
             Set<MetadataFormat> metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
+            Set<DCFormatCount> dcFormatCounts = createDCFormatCounts(dataHarvester.getRecords(), state);
 
             // metadataFormats and licenceCounts should always be there for any given repository
             if((metadataFormats.size() > 0) && (licenceCounts.size() > 0)) {
                 state.setLicenceCounts(licenceCounts);
                 state.setSetCounts(setCounts);
                 state.setMetadataFormats(metadataFormats);
+                state.setDCFormatCounts(dcFormatCounts);
             } else {
                 if(metadataFormats.size() == 0) { setStateToFailed("GOT 0 METADATAFORMATS"); }
                 if(licenceCounts.size() == 0) { setStateToFailed("GOT 0 LICENCES"); }
@@ -128,6 +130,22 @@ public class DataModelCreator {
         }
         logger.debug("Created {} SetCounts!", setCounts.size());
         return setCounts;
+    }
+
+    private Set<DCFormatCount> createDCFormatCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) {
+        logger.info("Creating DCFormatCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
+
+        Set<String> formats_raw = recordsRaw.stream().
+                map(harvestedRecord -> harvestedRecord.dc_format).
+                collect(Collectors.toSet());
+
+        Set<DCFormatCount> formatCounts = formats_raw.stream().
+                map(format_raw -> new DCFormatCount(format_raw, state)).
+                peek(formatCount -> logger.debug("Creating new DCFormatCount with dc_format: '{}'", formatCount.getDc_Format())).
+                collect(Collectors.toSet());
+
+        logger.debug("Created {} DCFormatCounts!", formatCounts.size());
+        return formatCounts;
     }
 
     private Set<MetadataFormat> createMetadataFormats(List<Format> formatsRaw, HarvestingState state) {
@@ -190,6 +208,7 @@ public class DataModelCreator {
         state.setLicenceCounts(null);
         state.setMetadataFormats(null);
         state.setSetCounts(null);
+        state.setDCFormatCounts(null);
         state.setEarliest_record_timestamp(null);
         state.setLatest_record_timestamp(null);
         state.setRecord_count(0);

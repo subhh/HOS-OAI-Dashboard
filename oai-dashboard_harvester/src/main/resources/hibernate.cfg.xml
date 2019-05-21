@@ -14,6 +14,7 @@
  		<mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState" />
         <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount" />
         <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.SetCount" />
+        <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.DCFormatCount" />
         <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.MetadataFormat" />
 
     </session-factory>

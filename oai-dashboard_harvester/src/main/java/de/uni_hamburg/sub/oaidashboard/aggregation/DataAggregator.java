@@ -1,10 +1,7 @@
 package de.uni_hamburg.sub.oaidashboard.aggregation;
 
 import de.uni_hamburg.sub.oaidashboard.database.DataModelCreator;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceType;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.SetCount;
+import de.uni_hamburg.sub.oaidashboard.database.datastructures.*;
 import de.uni_hamburg.sub.oaidashboard.harvesting.datastructures.HarvestedRecord;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,6 +30,7 @@ public class DataAggregator {
         countRecords();
         countRecordsForLicences();
         countRecordsForSets();
+        countRecordsForDCFormats();
     }
 
     private void countRecords() {
@@ -62,6 +60,17 @@ public class DataAggregator {
         for (LicenceCount licenceCount : dataModel.getState().getLicenceCounts()) {
             if (countMap.containsKey(licenceCount.getLicence_name())) {
                 licenceCount.setRecord_count(toIntExact(countMap.get(licenceCount.getLicence_name())));
+            }
+        }
+    }
+
+    private void countRecordsForDCFormats() {
+        Map<String, Long> countMap = countStrings(dataModel.getHarvestedRecords().stream().
+                map(harvestedRecord -> harvestedRecord.dc_format).
+                collect(Collectors.toList()));
+        for (DCFormatCount dcFormatCount : dataModel.getState().getDCFormatCounts()) {
+            if(countMap.containsKey(dcFormatCount.getDc_Format())) {
+                dcFormatCount.setRecord_count(toIntExact(countMap.get(dcFormatCount.getDc_Format())));
             }
         }
     }

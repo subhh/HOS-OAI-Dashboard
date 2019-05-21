@@ -47,9 +47,11 @@ These packages can be installed via apt.
   - create a database 
 - resources/hibernate.cfg.xml: Configuration of the database
 - create folders (currently hardcoded): `/tmp/harvest` and `/tmp/oai_git`
+- Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
 
 ## Configuration (REST-API)
 - resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical, except when the access to the database is different from the server running tomcat, i.e. docker-compose)
+- Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone WAR-file
 
 ## Running (harvester)
 Parameters:

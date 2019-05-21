@@ -26,10 +26,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,21 +37,24 @@ import java.util.*;
 
 public class HarvestingManager {
 
+	private static final String CONF_DIR = ".oai-dashboard";
+	private static final String CONF_FILENAME = "harvester.properties";
+
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
-	private static final String METHA_PATH = "/usr/sbin/";
+	private static String METHA_PATH = "/usr/sbin/";
 
 	private static final String METHA_ID = METHA_PATH + "metha-id";
 	private static final String METHA_SYNC = METHA_PATH + "metha-sync";
-	
-	// Here, metha-sync will place it's files (*.xml.gz) 
-	private static final String EXPORT_DIRECTORY = "/tmp/harvest";
-	
+
+	// Here, metha-sync will place it's files (*.xml.gz)
+	private static String EXPORT_DIRECTORY = "/tmp/harvest";
+
 	// Then, we will copy them here, and let git manage them.
-	// Also, the metha-id answer will be stored here. 
+	// Also, the metha-id answer will be stored here.
     // private static final String GIT_DIRECTORY = "/data";
-	private static final String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
+	private static String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
 	private static boolean RESET_DATABASE = true;
-	
+
 	// If the schema of the datadase should change, it's
 	// necessary to delete the database first based on the old schema.
 	private static final boolean DELETE_ONLY_DATABASE = false;
@@ -71,7 +71,7 @@ public class HarvestingManager {
 
     private static SchemaExport getSchemaExport() {
 		SchemaExport export = new SchemaExport();
-		// Script file.		
+		// Script file.
 		File outputFile = new File(SCRIPT_FILE);
 		if (outputFile.exists()) { outputFile.delete(); }
 		String outputFilePath = outputFile.getAbsolutePath();
@@ -90,15 +90,15 @@ public class HarvestingManager {
 		try {
 			tx = session.beginTransaction();
 			Repository repo = new Repository(name, url);
-			session.save(repo); 
+			session.save(repo);
 			tx.commit();
 		} catch (HibernateException e) {
 			if (tx != null) {
 				tx.rollback();
 			}
-			e.printStackTrace(); 
+			e.printStackTrace();
 		} finally {
-			session.close(); 
+			session.close();
 		}
 	}
 
@@ -106,16 +106,16 @@ public class HarvestingManager {
 		ArrayList<Repository> repositories = null;
 		Session session = factory.openSession();
 		Transaction tx = null;
-			
+
 		try {
 			tx = session.beginTransaction();
-			
+
 			CriteriaBuilder builder = session.getCriteriaBuilder();
 			CriteriaQuery<Repository> criteria = builder.createQuery(Repository.class);
 
 			Root<Repository> root = criteria.from(Repository.class);
 			criteria.select(root).where(builder.equal(root.get("state"), "ACTIVE"));
-			Query<Repository> q = session.createQuery(criteria);		
+			Query<Repository> q = session.createQuery(criteria);
 			repositories = (ArrayList<Repository>) q.getResultList();
 
 			tx.commit();
@@ -123,9 +123,9 @@ public class HarvestingManager {
 			if (tx != null) {
                 tx.rollback();
             }
-			e.printStackTrace(); 
+			e.printStackTrace();
 		} finally {
-			session.close(); 
+			session.close();
 		}
 		return repositories;
 	}
@@ -162,6 +162,29 @@ public class HarvestingManager {
     	}
 	}
 
+	private static void readConfigFromProperties() {
+		File dir = new File(System.getProperty("user.home") + "/" + CONF_DIR);
+		File file = new File(dir.toString() + "/" + CONF_FILENAME);
+		if(dir.isDirectory()) {
+			if(file.isFile()) {
+				logger.info("loaded configuration from: " + file.toString());
+				try {
+					Properties prop = new Properties();
+					prop.load(new FileInputStream(file.toString()));
+					HarvestingManager.METHA_PATH = prop.getProperty("harvester.metha.path");
+					HarvestingManager.EXPORT_DIRECTORY = prop.getProperty("harvester.export.dir");
+					HarvestingManager.GIT_PARENT_DIRECTORY = prop.getProperty("harvester.git.persistence.dir");
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			} else {
+				logger.info("configuration file does not exist: " + file.toString() + " using default configuration");
+			}
+		} else {
+			logger.info("configuration directory does not exist: " + dir.toString() + " using default configuration");
+		}
+	}
+
 	private static void initDatabase() {
 		// read config and create necessary objects
 		String configFileName = "hibernate.cfg.xml";
@@ -195,6 +218,7 @@ public class HarvestingManager {
 
 	public static void main(String[] args) {
     	parseCommandLine(args);
+    	readConfigFromProperties();
 		initDatabase();
 		if (DELETE_ONLY_DATABASE) {
 			return;
@@ -202,7 +226,7 @@ public class HarvestingManager {
 		List<Repository> repositories = getActiveReposFromDB();
 		resetGitDirectory();
 		initDirectories();
-		if (!REHARVEST) {			
+		if (!REHARVEST) {
 			harvestFromGit(repositories);
 		} else {
 			doHarvest(repositories, null);

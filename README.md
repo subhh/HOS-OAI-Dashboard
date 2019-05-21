@@ -55,7 +55,8 @@ These packages can be installed via apt.
     - harvester.git.persistence.dir
     - ...
   - example properties-file can be found in `src/main/resources/harvester.properties_example`
-- Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
+- A customized hibernate configuration file `hibernate.cfg.xml` can also be placed in `~/.oai-dashboard` which will then be loaded insteadt of the on in the classpath (`resources/hibernate.cfg.xml`)
+- When not using a hibernate configuration file in the config directory (`~/.oai-dashboard`), changes to the hibernate configuration (classpath) always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
 
 ## Configuration (REST-API)
 - resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical, except when the access to the database is different from the server running tomcat, i.e. docker-compose)

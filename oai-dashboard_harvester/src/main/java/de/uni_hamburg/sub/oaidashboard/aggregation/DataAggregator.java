@@ -22,7 +22,6 @@ public class DataAggregator {
         this.dataModel = dataModelCreator;
 
         countEntities();
-        markLicences();
         countOARecords();
     }
 
@@ -79,25 +78,6 @@ public class DataAggregator {
         return strings.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 
-    private void markLicences() {
-        logger.info("Marking Licences (LicenceCount) as OPEN, CLOSED or UNKNOWN");
-        Set<LicenceCount> licenceCounts = dataModel.getState().getLicenceCounts();
-        for(LicenceCount licenceCount: licenceCounts) {
-            if(licenceCount.getLicence_name().toLowerCase().contains("creativecommons")) {
-                logger.debug("Marked Licence with with licence_name: '{}', as OPEN", licenceCount.getLicence_name());
-                licenceCount.setLicence_type(LicenceType.OPEN);
-            } else if(licenceCount.getLicence_name().toLowerCase().contains("openaccess")) {
-                logger.debug("Marked Licence with with licence_name: '{}', as OPEN", licenceCount.getLicence_name());
-                licenceCount.setLicence_type(LicenceType.OPEN);
-            } else if(licenceCount.getLicence_name().toLowerCase().contains("embargoedaccess")) {
-                logger.debug("Marked Licence with with licence_name: '{}', as CLOSED", licenceCount.getLicence_name());
-                licenceCount.setLicence_type(LicenceType.CLOSED);
-            } else {
-                logger.debug("Marked Licence with with licence_name: '{}', as UNKNOWN", licenceCount.getLicence_name());
-                licenceCount.setLicence_type(LicenceType.UNKNOWN);
-            }
-        }
-    }
 
     private void countOARecords() {
         Set<LicenceCount> licenceCounts = dataModel.getState().getLicenceCounts();

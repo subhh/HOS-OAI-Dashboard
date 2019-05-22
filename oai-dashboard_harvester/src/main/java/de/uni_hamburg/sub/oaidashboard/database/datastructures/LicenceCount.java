@@ -6,7 +6,6 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-
 @Entity
 @Table(name = "LICENCECOUNT",
         uniqueConstraints = { @UniqueConstraint(columnNames = { "lc_id" }) })
@@ -33,13 +32,11 @@ public class LicenceCount {
     @JoinColumn(name = "state_id")
     private HarvestingState state;
 
-    public LicenceCount() {
+    public LicenceCount() {}
 
-    }
-
-    public LicenceCount(String licence_name, HarvestingState state) {
+    public LicenceCount(String licence_name, HarvestingState state, LicenceType lType) {
         this.licence_name = licence_name;
-        this.licence_type = LicenceType.UNASSIGNED;
+        this.licence_type = lType;
         this.state = state;
     }
 

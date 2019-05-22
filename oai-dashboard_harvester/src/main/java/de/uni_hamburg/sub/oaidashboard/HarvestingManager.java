@@ -61,7 +61,7 @@ public class HarvestingManager {
 	private static final boolean DELETE_ONLY_DATABASE = false;
 
 	// always set REHARVEST to false to use this.
-	private static final boolean RESTORE_DB_FROM_GIT = true;
+	private static final boolean RESTORE_DB_FROM_GIT = false;
 
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
@@ -203,6 +203,7 @@ public class HarvestingManager {
 		List<Repository> repositories = getActiveReposFromDB();
 		resetGitDirectory();
 		initDirectories();
+    	LicenceManager.initManager(factory);
 		if (!REHARVEST) {			
 			harvestFromGit(repositories);
 		} else {
@@ -212,8 +213,8 @@ public class HarvestingManager {
 	}
 
     private static void harvestFromGit(List<Repository> repositories) {
-	    Hashtable<String, Set<Repository>> gitTags = null;
-		gitTags = queryGitTags(repositories);
+	    Hashtable<String, Set<Repository>> gitTags = queryGitTags(repositories);
+		Timestamp stateTimestamp = null;
 		// It is necessary to restore latest setting before following checkout,
 		// as the checkout command does not 
 		// restore files which git assumes to be unchanged
@@ -236,13 +237,44 @@ public class HarvestingManager {
 			}
 		}
 		if (gitTags.size() == 1 && gitTags.containsKey("-- *")) {
-			// shortcut meanly meant for debugging. Beware of null setting for timestamp. 
-			doHarvest(repositories, null);
+			// shortcut meanly meant for debugging. Checkout latest commit
+			String tag = null;
+			for (Repository repo : repositories) {
+				try {
+					String methaUrlString = (String) File.separator 
+			    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+			    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+	    	  		    		
+		        	ProcessBuilder pb = new ProcessBuilder("git", "checkout", "master");        	
+		    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+		    		Process p = pb.start();
+		    		p.waitFor();
+		    		// now get the date from latest commit tag
+		        	pb = new ProcessBuilder("git", "-P", "tag");        	
+		    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
+		    		p = pb.start();
+		    		p.waitFor();
+		    		BufferedReader br = new BufferedReader(new InputStreamReader(p.getInputStream()));
+			        String line = null;
+		            while((line = br.readLine()) != null) {
+		            	// A tag usually is an isodate like "2019-04-16_09-40-06.888849".
+		            	// The latest tag can be found in the last line, so always overwrite previous tag
+		            	tag = line.trim();
+		                logger.info(line);
+		            }
+				}
+				catch (IOException e) {
+					System.err.println("Caught IOException: " + e.getMessage());
+				}
+				catch (InterruptedException e) {
+					System.err.println("Caught InterruptedException: " + e.getMessage());
+				}
+			}
+			doHarvest(repositories, createTimestampFromTag(tag));
 		} else {
 			Set<String> keySet = gitTags.keySet();
 			for (String key : keySet) {				
 				Set<Repository> repos = gitTags.get(key);
-				Timestamp stateTimestamp = null;
 				for (Repository repo : repos) {
 					try {
 						// the 'tag' we stored in the hashtable is a shortcut, we have to find
@@ -252,7 +284,7 @@ public class HarvestingManager {
 						String methaUrlString = (String) File.separator 
 				    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
 				    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
-		    	  		    		
+
 			        	ProcessBuilder pb = new ProcessBuilder("git", "-P", "tag", "-l", key+"*" );        	
 			    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
 			    		Process p = pb.start();
@@ -275,11 +307,7 @@ public class HarvestingManager {
 		            	pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
 		            	p = pb.start();		
 		            	p.waitFor();
-		            	// splits tag "YYYY-MM-DD_hh-mm-ss.xxxxx" into "YYYY-MM-DD" and "hh-mm-ss.xxxxx"
-		        		String[] tagParts = tag.split("_");
-		        		// changes "hh-mm-ss.xxxxx" into "hh:mm:ss.xxxxx"
-		        		// and concatenates both parts to "YYYY-MM-DD hh:mm:ss.xxxxx"
-		        		stateTimestamp = Timestamp.valueOf(tagParts[0] + " " + tagParts[1].replace("-", ":"));
+		        		stateTimestamp = createTimestampFromTag(tag);
 					}
 					catch (IOException e) {
 						System.err.println("Caught IOException: " + e.getMessage());
@@ -290,10 +318,17 @@ public class HarvestingManager {
 				}
 				doHarvest(new ArrayList<Repository>(repos), stateTimestamp);
 			}
-		}
-		
+		}	
 	}
 
+    private static Timestamp createTimestampFromTag(String tag) {
+    	// splits tag "YYYY-MM-DD_hh-mm-ss.xxxxx" into "YYYY-MM-DD" and "hh-mm-ss.xxxxx"
+		String[] tagParts = tag.split("_");
+		// changes "hh-mm-ss.xxxxx" into "hh:mm:ss.xxxxx"
+		// and concatenates both parts to "YYYY-MM-DD hh:mm:ss.xxxxx"
+		return Timestamp.valueOf(tagParts[0] + " " + tagParts[1].replace("-", ":"));
+    }
+    
 	private static void doHarvest(List<Repository> repositories, Timestamp stateTimestamp) {
 		if (repositories != null) {
 
@@ -301,6 +336,7 @@ public class HarvestingManager {
                 // From here, everything needs to be Single-Threaded in relation to each
 		    	// Repository:DataHarvester or Repository:HarvestingDataModel pair
                 // Second Step: instantiation of model
+		    	
                 DataModelCreator dataModelCreator = new DataModelCreator(repository, dataHarvester, factory,
                 		REHARVEST, stateTimestamp);
 

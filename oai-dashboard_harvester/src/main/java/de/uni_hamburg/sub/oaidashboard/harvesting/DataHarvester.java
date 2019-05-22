@@ -189,7 +189,6 @@ public class DataHarvester extends Thread {
                 logger.info(dirIn);
                 if(dirIn.exists()) {
                     for (File filepath: dirIn.listFiles()) {
-//                        if (filepath.getName().endsWith(".xml.gz")) {
                     	if (filepath.isFile()) {
                     		filepath.delete();
                         }

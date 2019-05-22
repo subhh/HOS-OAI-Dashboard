@@ -1,5 +1,6 @@
 package de.uni_hamburg.sub.oaidashboard.database;
 
+import de.uni_hamburg.sub.oaidashboard.LicenceManager;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.*;
 import de.uni_hamburg.sub.oaidashboard.database.validation.DataModelValidator;
 import de.uni_hamburg.sub.oaidashboard.harvesting.DataHarvester;
@@ -83,7 +84,7 @@ public class DataModelCreator {
         }
         try {
             // convert all Data (raw) to Java/Hibernate-DataModel
-            Set<LicenceCount> licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state);
+            Set<LicenceCount> licenceCounts = createLicenceCounts(dataHarvester.getRecords(), state, stateTimestamp);
             Set<SetCount> setCounts = createSetCounts(dataHarvester.getSets(), state);
             Set<MetadataFormat> metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
 
@@ -103,15 +104,16 @@ public class DataModelCreator {
         }
     }
 
-    private Set<LicenceCount> createLicenceCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) {
+    private Set<LicenceCount> createLicenceCounts(List<HarvestedRecord> recordsRaw, 
+    		HarvestingState state, Timestamp stateTimestamp) {
         logger.info("Creating LicenceCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
 
-        Set<String> licences_raw = recordsRaw.stream().
+        Set<String> licences_name = recordsRaw.stream().
                 map(harvestedRecord -> harvestedRecord.rightsList.get(0)).
                 collect(Collectors.toSet());
 
-        Set<LicenceCount> licenceCounts = licences_raw.stream().
-                map(licence_raw -> new LicenceCount(licence_raw, state)).
+        Set<LicenceCount> licenceCounts = licences_name.stream().
+                map(licence_name -> new LicenceCount(licence_name, state, LicenceManager.getType(licence_name, stateTimestamp))).
                 peek(licenceCount -> logger.debug("Creating new LicenceCount with name: '{}'", licenceCount.getLicence_name())).
                 collect(Collectors.toSet());
 

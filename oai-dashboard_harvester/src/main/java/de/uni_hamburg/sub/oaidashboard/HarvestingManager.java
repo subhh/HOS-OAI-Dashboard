@@ -44,8 +44,8 @@ public class HarvestingManager {
 	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
 	private static String METHA_PATH = "/usr/sbin/";
 
-	private static final String METHA_ID = METHA_PATH + "metha-id";
-	private static final String METHA_SYNC = METHA_PATH + "metha-sync";
+	private static String METHA_ID = METHA_PATH + "metha-id";
+	private static String METHA_SYNC = METHA_PATH + "metha-sync";
 
 	// Here, metha-sync will place it's files (*.xml.gz)
 	private static String EXPORT_DIRECTORY = "/tmp/harvest";
@@ -61,7 +61,7 @@ public class HarvestingManager {
 	private static final boolean DELETE_ONLY_DATABASE = false;
 
 	// always set REHARVEST to false to use this.
-	private static final boolean RESTORE_DB_FROM_GIT = false;
+	private static final boolean RESTORE_DB_FROM_GIT = true;
 
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
@@ -194,6 +194,8 @@ public class HarvestingManager {
 					Properties prop = new Properties();
 					prop.load(new FileInputStream(file.toString()));
 					HarvestingManager.METHA_PATH = prop.getProperty("harvester.metha.path");
+					HarvestingManager.METHA_ID = METHA_PATH + "metha-id";
+					HarvestingManager.METHA_SYNC = METHA_PATH + "metha-sync";
 					HarvestingManager.EXPORT_DIRECTORY = prop.getProperty("harvester.export.dir");
 					HarvestingManager.GIT_PARENT_DIRECTORY = prop.getProperty("harvester.git.persistence.dir");
 				} catch (IOException e) {

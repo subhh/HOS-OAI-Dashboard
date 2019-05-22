@@ -3,6 +3,9 @@ package de.uni_hamburg.sub.oaidashboard.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
@@ -24,6 +27,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 @Path("/api")
+@Api(value="/", description="Test" )
 public class RestApi {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -31,6 +35,7 @@ public class RestApi {
     @GET
     @Path("/ListRepos")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value="List all repositories")
     public String listRepos() throws IOException {
         logger.info("REST-API called /ListRepos");
 
@@ -44,7 +49,11 @@ public class RestApi {
     @GET
     @Path("/GetStateAtTimePoint/{repo_id}/{timepoint}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getStateAtTimePoint(@PathParam("repo_id") String repo_id,
+    @ApiOperation(value="Get (Harvesting-)State at specific timepoint by repository ID")
+    public String getStateAtTimePoint(@ApiParam(value="The ID of the repository (see ListRepos); Format: Number", required=true)
+                                          @PathParam("repo_id") String repo_id,
+                                      @ApiParam(value="The date (year, month, day) from which the harvested information " +
+                                              "shall be retrieved; Format: YYYY-MM-DD", required=true)
                                       @PathParam("timepoint") String timepoint) throws IOException {
         logger.info("REST-API called /GetStateAtTimePoint/{repo_id}/{timepoint} " +
                 "with params repo_id: '{}', timepoint: '{}'", repo_id, timepoint);
@@ -71,8 +80,14 @@ public class RestApi {
     @GET
     @Path("/GetStatesAtTimeRange/{repo_id}/{timepoint_from}/{timepoint_to}")
     @Produces(MediaType.APPLICATION_JSON)
-    public String getStatesAtTimeRange(@PathParam("repo_id") String repo_id,
+    @ApiOperation(value="Get States for a specific time range by repository ID")
+    public String getStatesAtTimeRange(@ApiParam(value="The ID of the repository (see ListRepos); Format: Number", required=true)
+                                           @PathParam("repo_id") String repo_id,
+                                       @ApiParam(value="The starting date (year, month, day) from which the harvested information " +
+                                               "shall be retrieved; Format: YYYY-MM-DD", required=true)
                                        @PathParam("timepoint_from") String timepoint_from,
+                                       @ApiParam(value="The ending date (year, month, day) from which the harvested information " +
+                                               "shall be retrieved; Format: YYYY-MM-DD", required=true)
                                        @PathParam("timepoint_to") String timepoint_to) throws IOException {
         logger.info("REST-API called /GetStateAtTimePoint/{repo_id}/{timepoint_from}/{timepoint_to} " +
                 "with params repo_id: '{}', timepoint_from: '{}', timepoint_to: '{}'",

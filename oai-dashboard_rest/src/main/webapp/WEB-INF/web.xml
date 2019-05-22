@@ -1,8 +1,8 @@
 <!DOCTYPE web-app PUBLIC
  "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
- "http://java.sun.com/dtd/web-app_2_3.dtd" >
+ "http://java.sun.com/dtd/web-app_2_3.dtd">
 
-<web-app>
+<web-app version="2.5">
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
     <servlet-name>Test Jersey Service</servlet-name>
@@ -11,7 +11,7 @@
     <init-param>
       <!-- For Jersey 2.x -->
       <param-name>jersey.config.server.provider.packages</param-name>
-      <param-value>de.uni_hamburg.sub.oaidashboard.rest</param-value>
+      <param-value>io.swagger.jaxrs.listing,de.uni_hamburg.sub.oaidashboard.rest</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>
@@ -19,4 +19,10 @@
     <servlet-name>Test Jersey Service </servlet-name>
     <url-pattern>/rest/*</url-pattern>
   </servlet-mapping>
+
+  <servlet>
+    <servlet-name>SwaggerBootstrap</servlet-name>
+    <servlet-class>de.uni_hamburg.sub.oaidashboard.config.SwaggerConfiguration</servlet-class>
+    <load-on-startup>2</load-on-startup>
+  </servlet>
 </web-app>

@@ -13,10 +13,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.zip.GZIPInputStream;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.apache.commons.io.input.TeeInputStream;
 
 public class XmlParser {
-	
+
+    private static Logger logger = LogManager.getLogger(Class.class.getName());
+
     static final String LISTRECORDS = "ListRecords";
     static final String RECORD = "record";
     static final String HEADER = "header";
@@ -24,6 +29,8 @@ public class XmlParser {
     static final String SETSPEC = "setSpec";
     static final String METADATA = "metadata";
     static final String RIGHTS = "rights";
+    static final String TYPE = "type";
+    static final String FORMAT = "format";
     static final String IDENTIFIER = "identifier";
 
 	public ArrayList<HarvestedRecord> getRecords(Path input_filepath, Path output_filepath) throws Exception
@@ -151,13 +158,24 @@ public class XmlParser {
                                                             record.rightsList.add((String) event.asCharacters().getData());
                                                             continue;
                                                         }
+                                                        if (startElement.getName().getLocalPart().equals(TYPE)) {
+
+                                                            event = eventReader.nextEvent();
+                                                            record.typeList.add((String) event.asCharacters().getData());
+                                                            continue;
+                                                        }
+                                                        if (startElement.getName().getLocalPart().equals(FORMAT)) {
+
+                                                            event = eventReader.nextEvent();
+                                                            record.dc_format = (String) event.asCharacters().getData();
+                                                            continue;
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                            		if (record.rightsList.isEmpty())
-                            		{
+                            		if (record.rightsList.isEmpty()) {
                             			record.rightsList.add("NO_RIGHTS");
                             		}
                                 }

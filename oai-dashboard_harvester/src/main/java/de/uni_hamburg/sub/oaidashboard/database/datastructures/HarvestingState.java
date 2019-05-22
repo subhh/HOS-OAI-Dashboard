@@ -62,7 +62,10 @@ public class HarvestingState {
     @OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
     private Set<MetadataFormat> metadataFormats;
 
-    public HarvestingState() {}
+	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+	private Set<DCFormatCount> dcFormatCounts;
+
+	public HarvestingState() {}
 	public HarvestingState(Timestamp timestamp, Repository repo, HarvestingStatus status) {
 		this.timestamp = timestamp;
 		this.repository = repo;
@@ -77,6 +80,7 @@ public class HarvestingState {
         getLicenceCounts().size();
         getSetCounts().size();
         getMetadataFormats().size();
+        getDCFormatCounts().size();
     }
 
 	public long getId() {
@@ -200,4 +204,12 @@ public class HarvestingState {
     public void setMetadataFormats(Set<MetadataFormat> metadataFormats) {
         this.metadataFormats = metadataFormats;
     }
+
+    public Set<DCFormatCount> getDCFormatCounts() {
+		return dcFormatCounts;
+	}
+
+	public void setDCFormatCounts(Set<DCFormatCount> dcFormatCounts) {
+		this.dcFormatCounts = dcFormatCounts;
+	}
 }

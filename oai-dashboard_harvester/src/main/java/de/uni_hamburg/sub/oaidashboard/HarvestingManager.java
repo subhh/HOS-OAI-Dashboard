@@ -142,7 +142,7 @@ public class HarvestingManager {
     		createDataBase(export, metadata);
     		logger.info("Setting up repositories...");
 			RepositoryManager repoManager = new RepositoryManager(factory);
-			repoManager.loadRepositoriesFromJson("/home/rost/.oai-dashboard/repositories.json", true);
+			repoManager.loadRepositoriesFromJson(System.getProperty("user.home") + "/" + CONF_DIR + "/repositories.json", true);
     	}
 	}
 

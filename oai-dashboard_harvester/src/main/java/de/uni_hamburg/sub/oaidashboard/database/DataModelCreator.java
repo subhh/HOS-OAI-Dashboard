@@ -16,10 +16,7 @@ import org.hibernate.Transaction;
 import java.io.File;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Calendar;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class DataModelCreator {
@@ -88,6 +85,7 @@ public class DataModelCreator {
             Set<SetCount> setCounts = createSetCounts(dataHarvester.getSets(), state);
             Set<MetadataFormat> metadataFormats = createMetadataFormats(dataHarvester.getMetadataFormats(), state);
             Set<DCFormatCount> dcFormatCounts = createDCFormatCounts(dataHarvester.getRecords(), state);
+            Set<DCTypeCount> dcTypeCounts = createDCTypeCounts(dataHarvester.getRecords(), state);
 
             // metadataFormats and licenceCounts should always be there for any given repository
             if((metadataFormats.size() > 0) && (licenceCounts.size() > 0)) {
@@ -95,6 +93,7 @@ public class DataModelCreator {
                 state.setSetCounts(setCounts);
                 state.setMetadataFormats(metadataFormats);
                 state.setDCFormatCounts(dcFormatCounts);
+                state.setDCTypeCounts(dcTypeCounts);
             } else {
                 if(metadataFormats.size() == 0) { setStateToFailed("GOT 0 METADATAFORMATS"); }
                 if(licenceCounts.size() == 0) { setStateToFailed("GOT 0 LICENCES"); }
@@ -148,6 +147,24 @@ public class DataModelCreator {
 
         logger.debug("Created {} DCFormatCounts!", formatCounts.size());
         return formatCounts;
+    }
+
+    private Set<DCTypeCount> createDCTypeCounts(List<HarvestedRecord> recordsRaw, HarvestingState state) {
+        logger.info("Creating DCTypeCounts (JavaModel) for repo: {}", repository.getHarvesting_url());
+
+        Set<String> types_raw = recordsRaw.stream().
+                map(harvestedRecord -> harvestedRecord.typeList).
+                flatMap(Collection::stream).
+                collect(Collectors.toSet());
+        //logger.info("set of types: {}", types_raw);
+
+        Set<DCTypeCount> typeCounts = types_raw.stream().
+                map(type_raw -> new DCTypeCount(type_raw, state)).
+                peek(typeCount -> logger.debug("Creating new DCTypeCount with dc_type: '{}'", typeCount.getDc_Type())).
+                collect(Collectors.toSet());
+
+        logger.debug("Created {} DCTypeCounts!", typeCounts.size());
+        return typeCounts;
     }
 
     private Set<MetadataFormat> createMetadataFormats(List<Format> formatsRaw, HarvestingState state) {
@@ -211,6 +228,7 @@ public class DataModelCreator {
         state.setMetadataFormats(null);
         state.setSetCounts(null);
         state.setDCFormatCounts(null);
+        state.setDCTypeCounts(null);
         state.setEarliest_record_timestamp(null);
         state.setLatest_record_timestamp(null);
         state.setRecord_count(0);

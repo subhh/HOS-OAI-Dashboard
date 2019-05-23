@@ -4,7 +4,9 @@ import de.uni_hamburg.sub.oaidashboard.aggregation.DataAggregator;
 import de.uni_hamburg.sub.oaidashboard.database.DataModelCreator;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingStatus;
+import de.uni_hamburg.sub.oaidashboard.database.datastructures.Licence;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount;
+import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceType;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository;
 import de.uni_hamburg.sub.oaidashboard.harvesting.DataHarvester;
 import de.uni_hamburg.sub.oaidashboard.repositories.RepositoryManager;
@@ -18,13 +20,17 @@ import org.hibernate.Transaction;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.schema.TargetType;
 
+import javax.persistence.Tuple;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Root;
 
 import java.io.*;
@@ -35,6 +41,14 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.Instant;
 import java.util.*;
+
+@org.hibernate.annotations.NamedNativeQueries(
+	    @org.hibernate.annotations.NamedNativeQuery(name = "Update_LicenceType", 	    
+	      query = "UPDATE LICENCECOUNT LC, LICENCE L SET LC.licence_type = L.licence_type "
+	        	+ "WHERE LC.licence_type='UNKNOWN' and LC.licence_type != L.licence_type and LC.licence_name = L.licence_name",
+//	      query = "select * from deptemployee emp where name=:name",
+	      resultClass = LicenceCount.class)
+	)
 
 public class HarvestingManager {
 
@@ -55,18 +69,18 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here.
     // private static final String GIT_DIRECTORY = "/data";
 	private static String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
-	private static boolean RESET_DATABASE = true;
+	private static boolean RESET_DATABASE = false;
 
 	// If the schema of the datadase should change, it's
 	// necessary to delete the database first based on the old schema.
 	private static final boolean DELETE_ONLY_DATABASE = false;
 
 	// always set REHARVEST to false to use this.
-	private static final boolean RESTORE_DB_FROM_GIT = true;
+	private static final boolean RESTORE_DB_FROM_GIT = false;
 
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
-	private static boolean REHARVEST = true;
+	private static boolean REHARVEST = false;
 	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
@@ -233,6 +247,7 @@ public class HarvestingManager {
 		resetGitDirectory();
 		initDirectories();
     	LicenceManager.initManager(factory);
+		updateUnkownLicences();
 		if (!REHARVEST) {			
 			harvestFromGit(repositories);
 		} else {
@@ -241,7 +256,30 @@ public class HarvestingManager {
 		logger.info("Finished.");
 	}
 
-    private static void harvestFromGit(List<Repository> repositories) {
+
+	private static void updateUnkownLicences() {
+		Session session = factory.openSession();
+		Transaction tx = session.beginTransaction();
+		
+		Query query = session.createNativeQuery(
+				"UPDATE LICENCECOUNT LC, LICENCE L SET LC.licence_type = L.licence_type "
+	        	+ "WHERE LC.licence_type='UNKNOWN' and LC.licence_type != L.licence_type "
+				+ "and LC.licence_name = L.licence_name");
+
+		try {
+			int rowsAffected = query.executeUpdate();
+			logger.info("Updated " + rowsAffected + " row(s) in LicenceCount with UNKNOWN Licence " +
+					"that is of open/closed type meanwhile.");
+		}
+		catch (HibernateException e) {
+			if (tx!=null) tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+	}
+
+	private static void harvestFromGit(List<Repository> repositories) {
 	    Hashtable<String, Set<Repository>> gitTags = queryGitTags(repositories);
 		Timestamp stateTimestamp = null;
 		// It is necessary to restore latest setting before following checkout,

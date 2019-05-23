@@ -9,6 +9,7 @@ import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceType;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository;
 import de.uni_hamburg.sub.oaidashboard.harvesting.DataHarvester;
+import de.uni_hamburg.sub.oaidashboard.repositories.RepositoryManager;
 import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -98,25 +99,6 @@ public class HarvestingManager {
 		return export;
 	}
 
-	private static void saveBasicRepoInfo(String name, String url) {
-		Session session = factory.openSession();
-		Transaction tx = null;
-
-		try {
-			tx = session.beginTransaction();
-			Repository repo = new Repository(name, url);
-			session.save(repo);
-			tx.commit();
-		} catch (HibernateException e) {
-			if (tx != null) {
-				tx.rollback();
-			}
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
-	}
-
 	public static ArrayList<Repository> getActiveReposFromDB() {
 		ArrayList<Repository> repositories = null;
 		Session session = factory.openSession();
@@ -172,8 +154,9 @@ public class HarvestingManager {
     	{
     		logger.info("Creating all tables  Database...");
     		createDataBase(export, metadata);
-    		logger.info("Setting up default repositories...");
-    		setUpDefaultRepositories();
+    		logger.info("Setting up repositories...");
+			RepositoryManager repoManager = new RepositoryManager(factory);
+			repoManager.loadRepositoriesFromJson(System.getProperty("user.home") + "/" + CONF_DIR + "/repositories.json", true);
     	}
 	}
 
@@ -252,13 +235,6 @@ public class HarvestingManager {
 		}
 	}
 
-	private static void setUpDefaultRepositories() {
-		saveBasicRepoInfo("tub.dok", "http://tubdok.tub.tuhh.de/oai/request");
-		saveBasicRepoInfo("Elektronische Dissertationen Universit&auml;t Hamburg, GERMANY", "http://ediss.sub.uni-hamburg.de/oai2/oai2.php");
-		saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
-		saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
-		saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
-	}
 
 	public static void main(String[] args) {
     	parseCommandLine(args);

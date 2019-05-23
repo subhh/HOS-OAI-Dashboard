@@ -46,7 +46,7 @@ These packages can be installed via apt.
   - set character-set/collation to specific utf8 (case/accent-insensitive) (for example --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs, in Ubuntu 18: edit /etc/mysql/mysql.conf.d/mysqld.cnf)
   - database schema is automatically configured by hibernate
   - create a database 
-- resources/hibernate.cfg.xml: Configuration of the database
+- src/main/resources/hibernate.cfg.xml: Configuration of the database
 - Configuration of specific settings via harvester.properties:
   - the properties-file "harvester.properties" is expected in the users home directory `~/.oai-dashboard`
   - current properties are:

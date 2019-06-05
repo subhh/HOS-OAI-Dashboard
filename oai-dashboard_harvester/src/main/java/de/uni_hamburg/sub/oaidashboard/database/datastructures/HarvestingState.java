@@ -17,6 +17,9 @@ import java.util.Set;
         */
         @NamedQuery(name="get_states_at_timerange", query="from HarvestingState where repository_id = :repo_id " +
                 "AND timestamp BETWEEN :timepoint_from AND DATE(:timepoint_to) + 1"), // always add one day (+1) to the higher value for BETWEEN (timepoint_to)
+		@NamedQuery(name="get_all_states_at_timepoint", query="from HarvestingState where YEAR(timestamp) = YEAR(:timepoint) " +
+				"AND MONTH(timestamp) = MONTH(:timepoint) " +
+				"AND DAY(timestamp) = DAY(:timepoint)")
 })
 public class HarvestingState {
 

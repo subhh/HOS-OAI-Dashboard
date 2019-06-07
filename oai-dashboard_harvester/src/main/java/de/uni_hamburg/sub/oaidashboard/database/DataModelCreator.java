@@ -7,6 +7,7 @@ import de.uni_hamburg.sub.oaidashboard.harvesting.DataHarvester;
 import de.uni_hamburg.sub.oaidashboard.harvesting.datastructures.Format;
 import de.uni_hamburg.sub.oaidashboard.harvesting.datastructures.HarvestedRecord;
 import de.uni_hamburg.sub.oaidashboard.harvesting.datastructures.MethaSet;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.Session;
@@ -259,5 +260,29 @@ public class DataModelCreator {
         for(SetCount setCount: state.getSetCounts()) {
             DataModelValidator.isValidSetCount(setCount);
         }
+    }
+
+    /**
+     * This method should be used to clean the datamodel by custom specifications.
+     * For example: Normally every Set of OAI-PMH should have (by definition) a "setSpec" and a "setName"
+     * Unfortunately there are repositories out there that violate the specifications and might not provide
+     * a name for every Set...
+     * The SQL-Schema was created with the correct OAI-PMH specifications in mind
+     * So here you can for example handle Sets without a name in order to make the harvesting more robust
+     */
+    public void clean() {
+        cleanSetCounts(state.getSetCounts());
+    }
+
+    private void cleanSetCounts(Set<SetCount> setCounts) {
+        Set<SetCount> removables = new HashSet<>();
+        for(SetCount setCount : setCounts) {
+            if(StringUtils.isEmpty(setCount.getSet_spec()) || StringUtils.isEmpty(setCount.getSet_name())) {
+                removables.add(setCount);
+                logger.warn("Marked setCount (OAI-PMH Set) for removal because Set specification or name are empty;" +
+                        " SetSpec: {}, SetName: {}", setCount.getSet_spec(), setCount.getSet_name());
+            }
+        }
+        setCounts.removeAll(removables);
     }
 }

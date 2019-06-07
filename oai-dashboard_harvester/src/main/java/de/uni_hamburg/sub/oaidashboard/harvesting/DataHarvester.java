@@ -37,6 +37,7 @@ public class DataHarvester extends Thread {
     private boolean reharvest;
 
     public boolean success = false;
+    public volatile boolean stopped = false;
 
     private List<Format> metadataFormats;
     private List<MethaSet> sets;
@@ -98,6 +99,7 @@ public class DataHarvester extends Thread {
         } catch (Exception e) {
             success = false;
             logger.error("Error while harvesting data from URL: {}", harvestingURL, e);
+            stopped = true;
         }
     }
 
@@ -129,14 +131,22 @@ public class DataHarvester extends Thread {
     	initGit.waitFor();
     }
     
-    private MethaIdStructure getMetaIdAnswer() {
+    private MethaIdStructure getMetaIdAnswer() throws Exception {
         MethaIdStructure instance = null;
         InputStream inStream = null;
         try {
             String storeToFile = gitDirectory + File.separator + "MethaID-Answer.json";
         	if (reharvest) {
 	            ProcessBuilder pb = new ProcessBuilder(metaIdPath, harvestingURL);
+                logger.info("Calling process: '{} {}'", metaIdPath, harvestingURL);
 	            Process p = pb.start();
+                BufferedReader brError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+                String lineError = null;
+                while((lineError = brError.readLine()) != null ) {
+                    if(lineError != null) {
+                        logger.info(lineError);
+                    }
+                }
 	            inStream = p.getInputStream();
         	}
         	else
@@ -156,7 +166,7 @@ public class DataHarvester extends Thread {
         		logger.error("Error while harvesting data from file: {}", 
         				gitDirectory + File.separator + "MethaID-Answer.json", e);
         	}
-            throw new ExceptionInInitializerError(e);
+            throw new Exception(e);
         }
         return instance;
     }

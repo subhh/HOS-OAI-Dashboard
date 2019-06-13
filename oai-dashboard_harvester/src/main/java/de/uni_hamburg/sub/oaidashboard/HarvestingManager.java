@@ -69,8 +69,9 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here.
     // private static final String GIT_DIRECTORY = "/data";
 	private static String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
-	private static boolean RESET_DATABASE = false;
 	private static String LICENCE_FILE = "/tmp/oai_git/licences.json";
+	private static boolean RESET_DATABASE = true;
+
 	// If the schema of the datadase should change, it's
 	// necessary to delete the database first based on the old schema.
 	private static final boolean DELETE_ONLY_DATABASE = false;
@@ -380,15 +381,19 @@ public class HarvestingManager {
                 		REHARVEST, stateTimestamp);
 
                 if(!(dataModelCreator.getState().getStatus() == HarvestingStatus.FAILURE)) {
-                	
-                    // Third Step: data aggregation (counting records, licences etc., mapping licences and more)
+
+                	// Third Step: clean DataModel by custom specifications
+					dataModelCreator.clean();
+
+					// Fourth Step: Validate against Hibernate/MySQL Schema
+					dataModelCreator.validate();
+
+					// Fifth Step: data aggregation (counting records, licences etc., mapping licences and more)
                     DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
 
-                    // Fourth Step: Validate against Hibernate/MySQL Schema + Custom Validation
-                    dataModelCreator.validate();
                 }
 
-                // Fifth Step: Saving model to Database
+                // Sixth Step: Saving model to Database
                 dataModelCreator.saveDataModel();
             };
 
@@ -570,7 +575,7 @@ public class HarvestingManager {
 			logger.info("unfinishedHarvestersSize: " + unfinishedHarvesters.size());
 		    for(DataHarvester dataHarvester: new HashSet<>(unfinishedHarvesters)) {
 		        try {
-                    if(dataHarvester.success || dataHarvester.t.isInterrupted()) {
+                    if(dataHarvester.success || dataHarvester.stopped) {
                         dataHarvester.t.join();
                         unfinishedHarvesters.remove(dataHarvester);
                         nextStepsCaller.callNextStep(harvesterRepoMap.get(dataHarvester), dataHarvester);

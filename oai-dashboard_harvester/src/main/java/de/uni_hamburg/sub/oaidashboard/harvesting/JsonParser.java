@@ -26,11 +26,11 @@ public class JsonParser {
 		dslJson = new DslJson<Object>(settings);
 		byte[] inputStreamBytes = IOUtils.toByteArray(is);
 		byte[] toFile = (filename != "") ? inputStreamBytes.clone() : null;
-		instance = dslJson.deserialize(MethaIdStructure.class, inputStreamBytes, inputStreamBytes.length);
-		if (filename != "")
-		{
-			new FileOutputStream(filename).write(toFile); 
+		if (filename != "") {
+			new FileOutputStream(filename).write(toFile);
 		}
+		instance = dslJson.deserialize(MethaIdStructure.class, inputStreamBytes, inputStreamBytes.length);
+
 		logger.info("Metadata received: {}", instance.identify.repositoryName);
 	}
 

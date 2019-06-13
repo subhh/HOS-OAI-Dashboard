@@ -17,6 +17,9 @@ import java.util.Set;
         */
         @NamedQuery(name="get_states_at_timerange", query="from HarvestingState where repository_id = :repo_id " +
                 "AND timestamp BETWEEN :timepoint_from AND DATE(:timepoint_to) + 1"), // always add one day (+1) to the higher value for BETWEEN (timepoint_to)
+		@NamedQuery(name="get_all_states_at_timepoint", query="from HarvestingState where YEAR(timestamp) = YEAR(:timepoint) " +
+				"AND MONTH(timestamp) = MONTH(:timepoint) " +
+				"AND DAY(timestamp) = DAY(:timepoint)")
 })
 public class HarvestingState {
 
@@ -65,6 +68,9 @@ public class HarvestingState {
 	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
 	private Set<DCFormatCount> dcFormatCounts;
 
+	@OneToMany(mappedBy = "state", cascade = CascadeType.ALL)
+	private Set<DCTypeCount> dcTypeCounts;
+
 	public HarvestingState() {}
 	public HarvestingState(Timestamp timestamp, Repository repo, HarvestingStatus status) {
 		this.timestamp = timestamp;
@@ -81,6 +87,7 @@ public class HarvestingState {
         getSetCounts().size();
         getMetadataFormats().size();
         getDCFormatCounts().size();
+        getDCTypeCounts().size();
     }
 
 	public long getId() {
@@ -212,4 +219,8 @@ public class HarvestingState {
 	public void setDCFormatCounts(Set<DCFormatCount> dcFormatCounts) {
 		this.dcFormatCounts = dcFormatCounts;
 	}
+
+	public Set<DCTypeCount> getDCTypeCounts() { return dcTypeCounts; }
+
+	public void setDCTypeCounts(Set<DCTypeCount> dcTypeCounts) { this.dcTypeCounts = dcTypeCounts; }
 }

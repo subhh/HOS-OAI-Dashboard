@@ -30,6 +30,7 @@ public class DataAggregator {
         countRecordsForLicences();
         countRecordsForSets();
         countRecordsForDCFormats();
+        countRecordsForDCTypes();
     }
 
     private void countRecords() {
@@ -47,6 +48,19 @@ public class DataAggregator {
         for (SetCount setCount: dataModel.getState().getSetCounts()) {
             if (countMap.containsKey(setCount.getSet_spec())) {
                 setCount.setRecord_count(toIntExact(countMap.get(setCount.getSet_spec())));
+            }
+        }
+    }
+
+    private void countRecordsForDCTypes() {
+        Map<String, Long> countMap = countStrings(dataModel.getHarvestedRecords().stream().
+                map(harvestedRecord -> harvestedRecord.typeList).
+                flatMap(Collection::stream).
+                collect(Collectors.toList()));
+
+        for (DCTypeCount typeCount: dataModel.getState().getDCTypeCounts()) {
+            if (countMap.containsKey(typeCount.getDc_Type())){
+                typeCount.setRecord_count(toIntExact(countMap.get(typeCount.getDc_Type())));
             }
         }
     }

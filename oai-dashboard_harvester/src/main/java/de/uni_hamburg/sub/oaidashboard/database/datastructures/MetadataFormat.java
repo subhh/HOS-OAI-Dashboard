@@ -50,7 +50,7 @@ public class MetadataFormat {
 
 	// Hibernate insists on having a setter method,
 	// but the metadataformat_id is chosen by the database.
-	private void setId(long format_id) {
+	public void setId(long format_id) {
 		this.format_id = format_id;
 	}
 

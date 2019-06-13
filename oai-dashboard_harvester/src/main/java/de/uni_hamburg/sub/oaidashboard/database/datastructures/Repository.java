@@ -3,7 +3,11 @@ package de.uni_hamburg.sub.oaidashboard.database.datastructures;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
+import java.util.Base64;
 
 @Entity
 @Table(name = "REPOSITORY",
@@ -17,6 +21,10 @@ public class Repository {
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int repository_id;
+
+	@NotNull
+	@Size(max=150)
+	private String initialDirectoryHash;
 
 	@NotNull
 	@Size(max=200)
@@ -56,11 +64,12 @@ public class Repository {
 	public Repository() {
 		this.state = "ACTIVE";
 	}
-	
+
 	public Repository(String name, String url) {
 		this.name = name;
 		this.harvesting_url = url;
 		this.state = "ACTIVE";
+		this.initialDirectoryHash = createHash(url);
 	}
 
 	public Repository(String name, String url, String mail) {
@@ -68,6 +77,7 @@ public class Repository {
 		this.harvesting_url = url;
 		this.kontakt = mail;
 		this.state = "ACTIVE";
+		this.initialDirectoryHash = createHash(url);
 	}
 
 	public int getId() {
@@ -78,6 +88,16 @@ public class Repository {
 	// but the id is chosen by the database.
 	private void setId(int repository_id) {
 		this.repository_id = repository_id;
+	}
+
+	public String getInitialDirectoryHash() {
+		return initialDirectoryHash;
+	}
+
+	// Hibernate insists on having a setter method, but the
+	// directoryHash is used as identifier, which is created
+	// upon repository creation and *must never* be changed.
+	private void setInitialDirectoryHash(String dh) {
 	}
 
 	public String getName() {
@@ -165,5 +185,18 @@ public class Repository {
 
 	public void setState( String state ) {
 		this.state = state;
+	}
+
+	private String createHash(String url) {
+		String hash = null;
+		try {
+			hash = (String) File.separator 
+	    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+	    					("#oai_dc#" + url).getBytes("UTF-8"));
+		}
+		catch (UnsupportedEncodingException ex) {
+			System.err.println("Caught Exception: " + ex.getMessage());
+		}
+		return hash;
 	}
 }

@@ -31,7 +31,7 @@ public class DataHarvester extends Thread {
     private final String metaSyncPath;
     private final String gitParentDirectory;
     private final String exportDirectory;
-    private String methaUrlString = null;
+    private final String methaUrlString;
     private String gitDirectory;
 
     private boolean reharvest;
@@ -48,9 +48,10 @@ public class DataHarvester extends Thread {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public DataHarvester(String harvestingURL, String mip, String msp,
+    public DataHarvester(String harvestingURL, String mUS, String mip, String msp,
                   String gpd, String ed, boolean reharvest) {
         this.harvestingURL = harvestingURL;
+        this.methaUrlString = mUS;
         this.metaIdPath = mip;
         this.metaSyncPath = msp;
         this.gitParentDirectory = gpd;
@@ -71,10 +72,6 @@ public class DataHarvester extends Thread {
         this.startTime = new Timestamp(Calendar.getInstance().getTime().getTime());
 
         try {
-        	methaUrlString = (String) File.separator 
-        			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-        					("#oai_dc#" + harvestingURL).getBytes("UTF-8"));
-
             gitDirectory = new File(gitParentDirectory + File.separator + methaUrlString).getCanonicalPath();
             ensureGit();
 

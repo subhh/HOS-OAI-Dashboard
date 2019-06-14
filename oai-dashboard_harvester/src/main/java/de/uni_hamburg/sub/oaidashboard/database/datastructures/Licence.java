@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "LICENCE",
-   uniqueConstraints = { @UniqueConstraint(columnNames = { "licence_id" }) })
+   uniqueConstraints = { @UniqueConstraint(columnNames = { "licence_name", "valid_from", "valid_until" }) })
 
 public class Licence {
 	private int id;
@@ -31,7 +31,7 @@ public class Licence {
 		this.licenceType = LicenceType.UNASSIGNED;
 		this.validFrom = new Timestamp(0);
 	}
-
+	
 	@Id
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name = "licence_id")
@@ -44,7 +44,7 @@ public class Licence {
 	private void setId(int id) {
 		this.id = id;
 	}
-	
+
 	@Column(name = "licence_name", length = 200, nullable = false)
 	public String getName() {
 		return name;

@@ -46,7 +46,7 @@ import java.util.*;
 	    @org.hibernate.annotations.NamedNativeQuery(name = "Update_LicenceType", 	    
 	      query = "UPDATE LICENCECOUNT LC, LICENCE L SET LC.licence_type = L.licence_type "
 	        	+ "WHERE LC.licence_type='UNKNOWN' and LC.licence_type != L.licence_type and LC.licence_name = L.licence_name",
-//	      query = "select * from deptemployee emp where name=:name",
+
 	      resultClass = LicenceCount.class)
 	)
 
@@ -69,6 +69,7 @@ public class HarvestingManager {
 	// Also, the metha-id answer will be stored here.
     // private static final String GIT_DIRECTORY = "/data";
 	private static String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
+	private static String LICENCE_FILE = "/tmp/oai_git/licences.json";
 	private static boolean RESET_DATABASE = true;
 
 	// If the schema of the datadase should change, it's
@@ -195,6 +196,7 @@ public class HarvestingManager {
 					HarvestingManager.METHA_SYNC = METHA_PATH + "metha-sync";
 					HarvestingManager.EXPORT_DIRECTORY = prop.getProperty("harvester.export.dir");
 					HarvestingManager.GIT_PARENT_DIRECTORY = prop.getProperty("harvester.git.persistence.dir");
+					HarvestingManager.LICENCE_FILE = prop.getProperty("harvester.licences.file");
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -246,37 +248,14 @@ public class HarvestingManager {
 		List<Repository> repositories = getActiveReposFromDB();
 		resetGitDirectory();
 		initDirectories();
-    	LicenceManager.initManager(factory);
-		updateUnkownLicences();
+    	LicenceManager.initManager(factory, LICENCE_FILE);
 		if (!REHARVEST) {			
 			harvestFromGit(repositories);
 		} else {
 			doHarvest(repositories, null);
 		}
+		LicenceManager.writeLicencesToFile();
 		logger.info("Finished.");
-	}
-
-
-	private static void updateUnkownLicences() {
-		Session session = factory.openSession();
-		Transaction tx = session.beginTransaction();
-		
-		Query query = session.createNativeQuery(
-				"UPDATE LICENCECOUNT LC, LICENCE L SET LC.licence_type = L.licence_type "
-	        	+ "WHERE LC.licence_type='UNKNOWN' and LC.licence_type != L.licence_type "
-				+ "and LC.licence_name = L.licence_name");
-
-		try {
-			int rowsAffected = query.executeUpdate();
-			logger.info("Updated " + rowsAffected + " row(s) in LicenceCount with UNKNOWN Licence " +
-					"that is of open/closed type meanwhile.");
-		}
-		catch (HibernateException e) {
-			if (tx!=null) tx.rollback();
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
 	}
 
 	private static void harvestFromGit(List<Repository> repositories) {
@@ -287,9 +266,7 @@ public class HarvestingManager {
 		// restore files which git assumes to be unchanged
 		for (Repository repo : repositories) {
 			try {
-				String methaUrlString = (String) File.separator 
-		    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-		    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+				String methaUrlString = repo.getInitialDirectoryHash();
     	  		    		
 	        	ProcessBuilder pb = new ProcessBuilder("git", "checkout", "--", "*");        	
 	    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
@@ -308,9 +285,7 @@ public class HarvestingManager {
 			String tag = null;
 			for (Repository repo : repositories) {
 				try {
-					String methaUrlString = (String) File.separator 
-			    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-			    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+					String methaUrlString = repo.getInitialDirectoryHash();
 	    	  		    		
 		        	ProcessBuilder pb = new ProcessBuilder("git", "checkout", "master");        	
 		    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
@@ -348,9 +323,7 @@ public class HarvestingManager {
 						// the corresponding complete tag (with minutes, seconds, ...).
 						// If more than one tag matches, take only the last one.
 						BufferedReader br;
-						String methaUrlString = (String) File.separator 
-				    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-				    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
+						String methaUrlString = repo.getInitialDirectoryHash();
 
 			        	ProcessBuilder pb = new ProcessBuilder("git", "-P", "tag", "-l", key+"*" );        	
 			    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
@@ -441,10 +414,7 @@ public class HarvestingManager {
 			if (RESTORE_DB_FROM_GIT) {  
 				BufferedReader br;
 				try {
-					String methaUrlString = (String) File.separator 
-			    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-			    					("#oai_dc#" + repo.getHarvesting_url()).getBytes("UTF-8"));
-
+					String methaUrlString = repo.getInitialDirectoryHash();
 		        	ProcessBuilder pb = new ProcessBuilder("git", "-P", "tag");        	
 		    		pb.directory(new File(GIT_PARENT_DIRECTORY + methaUrlString));
 		    		Process p = pb.start();
@@ -513,6 +483,7 @@ public class HarvestingManager {
 				.sorted(Comparator.reverseOrder())
 				.filter(p -> !p.toString().contains(".git"))
 				.map(Path::toFile)
+				.filter(f -> !f.getParent().toString().matches(GIT_PARENT_DIRECTORY)) // only delete files within repo dirs 
 				.forEach(File::delete);
 			}
 		}
@@ -592,8 +563,8 @@ public class HarvestingManager {
         Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
         
 		for(Repository repo : repositories) {
-			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), METHA_ID, METHA_SYNC,
-					GIT_PARENT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
+			DataHarvester dataHarvester = new DataHarvester(repo.getHarvesting_url(), repo.getInitialDirectoryHash(),
+					METHA_ID, METHA_SYNC, GIT_PARENT_DIRECTORY, EXPORT_DIRECTORY, REHARVEST);
 			harvesterRepoMap.put(dataHarvester, repo);
 			dataHarvester.start();
 		}

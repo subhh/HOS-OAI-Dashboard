@@ -62,7 +62,7 @@ public class DataModelCreator {
     		pb.command("git", "tag", tag);
     		Process tagGit = pb.start();
     		tagGit.waitFor();
-    		logger.info("Stored harvested records into git: {}");
+    		logger.info("Stored harvested records into git " + gitDirectory);
     	}
     	catch (Exception e) {
     		logger.error("Error while storing harvested records into git: {}", e);

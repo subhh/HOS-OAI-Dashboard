@@ -20,7 +20,6 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 

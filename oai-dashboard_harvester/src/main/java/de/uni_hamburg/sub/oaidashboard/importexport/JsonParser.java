@@ -62,6 +62,7 @@ public class JsonParser {
 		convertDbLicencesToJson(dbLicences);
 		try {
 			if (filename != "") {
+				logger.info("Writing licences.json (full path: {})", filename);
 				dslJson.serialize(writer, licences);
 				PrettifyOutputStream out = new PrettifyOutputStream(new FileOutputStream(filename));
 				out.write(writer.toByteArray());

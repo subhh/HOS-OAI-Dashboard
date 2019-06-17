@@ -17,6 +17,9 @@ public class CommandLineHandler {
     private static final String OPTION_LONG_CONF_DIR = "config-directory";
     private static final String OPTION_SHORT_REHARVEST = "REHARVEST";
     private static final String OPTION_LONG_REHARVEST = "";
+    private static final String OPTION_START_HARVEST = "harvest";
+    private static final String OPTION_SHORT_ONLY_UPDATE_LICENCES = "oul";
+    private static final String OPTION_LONG_ONLY_UPDATE_LICENCES = "only-update-licences";
 
     // flags/flag-vars
     public boolean FLAG_RESET_DB = false;
@@ -24,6 +27,8 @@ public class CommandLineHandler {
     public boolean FLAG_CONF_DIR = false;
     public String SET_CONF_DIR = "";
     public boolean FLAG_REHARVEST = false;
+    public boolean FLAG_START_HARVEST = false;
+    public boolean FLAG_ONLY_UPDATE_LICENCES = false;
 
     private static final String RESET_DATABASE_CONFIRMATION = "RESET-THE-DATABASE";
 
@@ -41,10 +46,8 @@ public class CommandLineHandler {
 
         // check conditions, if there are no args, can it run?
         if (args.length == 0) {
-            if(options.getRequiredOptions().size() > 0) {
-                showCommandLineHelp(options);
-                success = false;
-            }
+            showCommandLineHelp(options);
+            success = false;
         }
 
         if(args.length > 0) {
@@ -80,6 +83,12 @@ public class CommandLineHandler {
                     String config_directory_argument = commandLine.getOptionValue(OPTION_SHORT_CONF_DIR);
                     FLAG_CONF_DIR = true;
                     SET_CONF_DIR = config_directory_argument;
+                }
+                if(commandLine.hasOption(OPTION_START_HARVEST)) {
+                    FLAG_START_HARVEST = true;
+                }
+                if(commandLine.hasOption(OPTION_SHORT_ONLY_UPDATE_LICENCES)) {
+                    FLAG_ONLY_UPDATE_LICENCES = true;
                 }
             } catch (MissingOptionException e) {
                 LOGGER.info("Missing option(s): {}", String.join(",", e.getMissingOptions()));
@@ -118,11 +127,20 @@ public class CommandLineHandler {
                 .argName("configuration directory")
                 .desc("set the configuration directory (default: ~/.oaidashboard)")
                 .build();
+        Option start_harvest_option = Option.builder(OPTION_START_HARVEST)
+                .required(false)
+                .desc("start harvesting with current configuration")
+                .build();
         Option initialize_database_option = Option.builder(OPTION_SHORT_INIT)
                 .required(false)
                 .longOpt(OPTION_LONG_INIT)
                 .desc("Initialize the database (should only done once when installing the harvester, data preservation " +
                         "not guaranteed)")
+                .build();
+        Option only_update_licences_option = Option.builder(OPTION_SHORT_ONLY_UPDATE_LICENCES)
+                .required(false)
+                .longOpt(OPTION_LONG_ONLY_UPDATE_LICENCES)
+                .desc("only update licences from licences.json, NO OTHER OPERATIONS WILL TAKE PLACE")
                 .build();
         // TODO: remove this argument because it is dangerous in a production environment
         Option reset_database_option = Option.builder(OPTION_SHORT_RESET)
@@ -134,14 +152,16 @@ public class CommandLineHandler {
                 .build();
         // TODO: remove this argument because it is dangerous in a production environment
         Option reharvest_option = Option.builder(OPTION_SHORT_REHARVEST)
-                .required(true)
+                .required(false)
                 .hasArg()
-                .desc("Reharvest")
+                .desc("NOT TO BE USED IN PRODUCTION, TESTING/DEVELOPING ONLY")
                 .build();
 
         options.addOption(show_help_option);
         options.addOption(config_directory_option);
+        options.addOption(start_harvest_option);
         options.addOption(initialize_database_option);
+        options.addOption(only_update_licences_option);
         options.addOption(reset_database_option);
         options.addOption(reharvest_option);
 

@@ -53,6 +53,8 @@ public class HarvestingManager {
 	// but very useful for debugging, as harvesting may take a lot of time.
 	private static boolean REHARVEST = true;
 
+	private static boolean START_HARVEST = false;
+
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
 	private static void readConfigFromProperties() {
@@ -89,25 +91,29 @@ public class HarvestingManager {
 			// always start with the command line directory!
 			setConfDirFromCommandLine(clHandler);
 			DatabaseManager dbMan = new DatabaseManager(CONF_DIR);
-			applyCommandLineSettings(clHandler, dbMan);
+			boolean continue_operation = applyCommandLineSettings(clHandler, dbMan);
 
-			logger.info("using configuration directory '{}'", CONF_DIR);
+			if(continue_operation) {
+				logger.info("using configuration directory '{}'", CONF_DIR);
 
-			readConfigFromProperties();
+				readConfigFromProperties();
 
-			//dbMan.initializeRepositoriesFromJson();
+				//dbMan.initializeRepositoriesFromJson();
 
-			List<Repository> repositories = dbMan.getActiveReposFromDB();
-			resetGitDirectory();
-			initDirectories();
-			LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
-			if (!REHARVEST) {
-				harvestFromGit(repositories, dbMan);
-			} else {
-				doHarvest(repositories, null, dbMan.getSessionFactory());
+				List<Repository> repositories = dbMan.getActiveReposFromDB();
+				resetGitDirectory(); // TODO: evaluate if this must be called only when START_HARVEST is true
+				initDirectories();
+				LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
+				if (!REHARVEST) {
+					harvestFromGit(repositories, dbMan);
+				} else {
+					if (START_HARVEST) {
+						doHarvest(repositories, null, dbMan.getSessionFactory());
+					}
+				}
+				LicenceManager.writeLicencesToFile();
+				logger.info("Finished.");
 			}
-			LicenceManager.writeLicencesToFile();
-			logger.info("Finished.");
 		}
 	}
 
@@ -118,7 +124,15 @@ public class HarvestingManager {
 		}
 	}
 
-	private static void applyCommandLineSettings(CommandLineHandler clHandler, DatabaseManager dbMan) {
+	/**
+	 * Reads an instance of CommandLineHandler for the flags that got set while parsing the command line arguments
+	 * and applies all settings
+	 * @param clHandler, instance of CommandLineHandler (that got used for parsing the command line arguments)
+	 * @param dbMan, instance of DatabaseManager (some command line arguments issue operations on the database)
+	 * @return continue_operation, if false, application should be stopped after this method call
+	 */
+	private static boolean applyCommandLineSettings(CommandLineHandler clHandler, DatabaseManager dbMan) {
+		boolean continue_operation = true;
 		if(clHandler.FLAG_INIT_DB) {
 			logger.info("Initializing the database");
 			dbMan.initializeDatabase();
@@ -131,6 +145,18 @@ public class HarvestingManager {
 			logger.info("Setting REHARVEST to: {}", clHandler.FLAG_REHARVEST);
 			REHARVEST = clHandler.FLAG_REHARVEST;
 		}
+		if(clHandler.FLAG_START_HARVEST) {
+			logger.info("Starting harvesting run");
+			START_HARVEST = true;
+		} else {
+			logger.info("### Not starting a harvesting run (not issued), see help for more information ###");
+		}
+		if(clHandler.FLAG_ONLY_UPDATE_LICENCES) {
+			logger.info("Only updating licences according to licences.json (expected location according to current config: {})", LICENCE_FILE);
+			LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
+			continue_operation = false;
+		}
+		return continue_operation;
 	}
 
 	private static void harvestFromGit(List<Repository> repositories, DatabaseManager dbMan) {
@@ -381,6 +407,10 @@ public class HarvestingManager {
 			dataHarvester.start();
 		}
 		logger.info("Waiting for DataHarvesters to finish ...");
+
+		if(harvesterRepoMap.size() == 0) {
+			logger.info("No Repositories configured for harvesting, see help for more information");
+		}
 
 		Set<DataHarvester> unfinishedHarvesters = new HashSet<>(harvesterRepoMap.keySet());
 		while(unfinishedHarvesters.size() > 0) {

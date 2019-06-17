@@ -95,7 +95,7 @@ public class HarvestingManager {
 
 			readConfigFromProperties();
 
-			dbMan.initializeRepositoriesFromJson();
+			//dbMan.initializeRepositoriesFromJson();
 
 			List<Repository> repositories = dbMan.getActiveReposFromDB();
 			resetGitDirectory();
@@ -260,13 +260,12 @@ public class HarvestingManager {
                 	// Third Step: clean DataModel by custom specifications
 					dataModelCreator.clean();
 
-					// Fourth Step: Validate against Hibernate/MySQL Schema
-					dataModelCreator.validate();
-
-					// Fifth Step: data aggregation (counting records, licences etc., mapping licences and more)
+					// Fourth Step: data aggregation (counting records, licences etc., mapping licences and more)
                     DataAggregator dataAggregator = new DataAggregator(dataModelCreator);
 
-                }
+					// Fifth Step: Validate against Hibernate/MySQL Schema
+					dataModelCreator.validate();
+				}
 
                 // Sixth Step: Saving model to Database
                 dataModelCreator.saveDataModel();

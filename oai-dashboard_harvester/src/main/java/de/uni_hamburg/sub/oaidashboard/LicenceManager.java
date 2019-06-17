@@ -108,12 +108,13 @@ public class LicenceManager {
 				lic.setValidFrom(jlic.validFrom);
 				lic.setValidUntil(jlic.validUntil);
 				storeNewLicence(lic);
+				licences.put(lic.getName(), new HashSet<> (Arrays.asList(lic)));
 			}	
 		}
 	}
 
 	public static void writeLicencesToFile() {
-		licenceJsonParser.setLicences(licences);		
+		licenceJsonParser.setLicences(licences);
 	}
 	
 	public static LicenceType getType(String name, Timestamp date) {		

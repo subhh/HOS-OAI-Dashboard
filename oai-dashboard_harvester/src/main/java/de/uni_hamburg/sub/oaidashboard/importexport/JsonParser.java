@@ -1,7 +1,6 @@
 package de.uni_hamburg.sub.oaidashboard.importexport;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
@@ -62,12 +61,12 @@ public class JsonParser {
 	public void setLicences(Hashtable<String, Set<Licence>> dbLicences) {
 		convertDbLicencesToJson(dbLicences);
 		try {
-			dslJson.serialize(writer, licences);
-			if (filename != "")
-			{
-				BufferedWriter bwriter = new BufferedWriter(new FileWriter(filename));
-				bwriter.write(writer.toString());
-				bwriter.close();
+			if (filename != "") {
+				dslJson.serialize(writer, licences);
+				PrettifyOutputStream out = new PrettifyOutputStream(new FileOutputStream(filename));
+				out.write(writer.toByteArray());
+				out.flush();
+				out.close();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

@@ -39,15 +39,23 @@ public class JsonParser {
 
 	public Set<JsonLicence> getLicences() {
 		byte[] inputStreamBytes;
-		try {
-			inputStreamBytes = IOUtils.toByteArray(new FileInputStream(filename));
-			licences=null;
-			licences = dslJson.deserialize(Licences.class, inputStreamBytes, inputStreamBytes.length);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+
+		licences = null;
+		File file = new File(filename);
+		if(file.isFile()) {
+			try {
+				inputStreamBytes = IOUtils.toByteArray(new FileInputStream(filename));
+
+				licences = dslJson.deserialize(Licences.class, inputStreamBytes, inputStreamBytes.length);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			logger.info("Licences received: {}", licences.toString());
+		} else {
+			licences = new Licences();
+			licences.licenceSet = new HashSet<>();
+			logger.info("No Licences received (no file found or empty): {}", filename);
 		}
-		logger.info("Licences received: {}", licences.toString());
 		return licences.licenceSet;
 	}
 	

@@ -1,45 +1,22 @@
 package de.uni_hamburg.sub.oaidashboard;
 
 import de.uni_hamburg.sub.oaidashboard.aggregation.DataAggregator;
+import de.uni_hamburg.sub.oaidashboard.commandline.CommandLineHandler;
 import de.uni_hamburg.sub.oaidashboard.database.DataModelCreator;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState;
+import de.uni_hamburg.sub.oaidashboard.database.DatabaseManager;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingStatus;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.Licence;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceCount;
-import de.uni_hamburg.sub.oaidashboard.database.datastructures.LicenceType;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository;
 import de.uni_hamburg.sub.oaidashboard.harvesting.DataHarvester;
-import de.uni_hamburg.sub.oaidashboard.repositories.RepositoryManager;
-import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.HibernateException;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.boot.Metadata;
-import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.query.NativeQuery;
-import org.hibernate.query.Query;
-import org.hibernate.service.ServiceRegistry;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.hibernate.tool.schema.TargetType;
-
-import javax.persistence.Tuple;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.CriteriaUpdate;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Root;
 
 import java.io.*;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.time.Instant;
 import java.util.*;
 
 @org.hibernate.annotations.NamedNativeQueries(
@@ -52,29 +29,22 @@ import java.util.*;
 
 public class HarvestingManager {
 
-	private static final String CONF_DIR = ".oai-dashboard";
+	private static String CONF_DIR = System.getProperty("user.home") + "/" + ".oai-dashboard/";
 	private static final String CONF_FILENAME_PROPERTIES = "harvester.properties";
-	private static final String CONF_FILENAME_HIBERNATE = "hibernate.cfg.xml";
 
-	private static final String SCRIPT_FILE = "exportSchemaScript.sql";
 	private static String METHA_PATH = "/usr/sbin/";
 
 	private static String METHA_ID = METHA_PATH + "metha-id";
 	private static String METHA_SYNC = METHA_PATH + "metha-sync";
 
 	// Here, metha-sync will place it's files (*.xml.gz)
-	private static String EXPORT_DIRECTORY = "/tmp/harvest";
+	private static String EXPORT_DIRECTORY = CONF_DIR + "harvest";
 
 	// Then, we will copy them here, and let git manage them.
 	// Also, the metha-id answer will be stored here.
     // private static final String GIT_DIRECTORY = "/data";
-	private static String GIT_PARENT_DIRECTORY = "/tmp/oai_git";
-	private static String LICENCE_FILE = "/tmp/oai_git/licences.json";
-	private static boolean RESET_DATABASE = true;
-
-	// If the schema of the datadase should change, it's
-	// necessary to delete the database first based on the old schema.
-	private static final boolean DELETE_ONLY_DATABASE = false;
+	private static String GIT_PARENT_DIRECTORY = CONF_DIR + "oai_git";
+	private static String LICENCE_FILE = CONF_DIR + "licences.json";
 
 	// always set REHARVEST to false to use this.
 	private static final boolean RESTORE_DB_FROM_GIT = false;
@@ -82,108 +52,11 @@ public class HarvestingManager {
 	// This flag is useless for production (must always be true),
 	// but very useful for debugging, as harvesting may take a lot of time.
 	private static boolean REHARVEST = true;
-	private static SessionFactory factory;
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    private static SchemaExport getSchemaExport() {
-		SchemaExport export = new SchemaExport();
-		// Script file.
-		File outputFile = new File(SCRIPT_FILE);
-		if (outputFile.exists()) { outputFile.delete(); }
-		String outputFilePath = outputFile.getAbsolutePath();
-		logger.info("Export file: {}", outputFilePath);
-		export.setDelimiter(";");
-		export.setOutputFile(outputFilePath);
-		// No Stop if Error
-		export.setHaltOnError(false);
-		return export;
-	}
-
-	public static ArrayList<Repository> getActiveReposFromDB() {
-		ArrayList<Repository> repositories = null;
-		Session session = factory.openSession();
-		Transaction tx = null;
-
-		try {
-			tx = session.beginTransaction();
-
-			CriteriaBuilder builder = session.getCriteriaBuilder();
-			CriteriaQuery<Repository> criteria = builder.createQuery(Repository.class);
-
-			Root<Repository> root = criteria.from(Repository.class);
-			criteria.select(root).where(builder.equal(root.get("state"), "ACTIVE"));
-			Query<Repository> q = session.createQuery(criteria);
-			repositories = (ArrayList<Repository>) q.getResultList();
-
-			tx.commit();
-		} catch (HibernateException e) {
-			if (tx != null) {
-                tx.rollback();
-            }
-			e.printStackTrace();
-		} finally {
-			session.close();
-		}
-		return repositories;
-	}
-
-	public static void dropDataBase(SchemaExport export, Metadata metadata) {
-		// TargetType.DATABASE - Execute on Database
-		// TargetType.SCRIPT - Write Script file.
-		// TargetType.STDOUT - Write log to Console.
-		EnumSet<TargetType> targetTypes = EnumSet.of(
-				TargetType.DATABASE, TargetType.SCRIPT, TargetType.STDOUT);
-		export.drop(targetTypes, metadata);
-	}
-
-	public static void createDataBase(SchemaExport export, Metadata metadata) {
-		// TargetType.DATABASE - Execute on Databse
-		// TargetType.SCRIPT - Write Script file.
-		// TargetType.STDOUT - Write log to Console.
-		EnumSet<TargetType> targetTypes = EnumSet.of(
-				TargetType.DATABASE, TargetType.SCRIPT, TargetType.STDOUT);
-		SchemaExport.Action action = SchemaExport.Action.CREATE;
-		export.execute(targetTypes, action, metadata);
-		System.out.println("Export OK");
-	}
-
-	private static void resetDatabase(SchemaExport export, Metadata metadata) {
-		logger.info("Dropping all tables of database...");
-		dropDataBase(export, metadata);
-    	if (!DELETE_ONLY_DATABASE)
-    	{
-    		logger.info("Creating all tables  Database...");
-    		createDataBase(export, metadata);
-    		logger.info("Setting up repositories...");
-			RepositoryManager repoManager = new RepositoryManager(factory);
-			repoManager.loadRepositoriesFromJson(System.getProperty("user.home") + "/" + CONF_DIR + "/repositories.json", true);
-    	}
-	}
-
-	private static File loadHibernateConfigFromDirectory() {
-		File configFile = null;
-		File dir = new File(System.getProperty("user.home") + "/" + CONF_DIR);
-		File file = new File(dir.toString() + "/" + CONF_FILENAME_HIBERNATE);
-		if(dir.isDirectory()) {
-			if(file.isFile()) {
-				configFile = file;
-			} else {
-				logger.info("hibernate configuration file does not exist: " + file.toString());
-			}
-		} else {
-			logger.info("configuration directory does not exist: " + dir.toString());
-		}
-		if(configFile != null) {
-			logger.info("loaded hibernate configuration from: " + configFile.toString());
-		} else {
-			logger.info("failed to load hibernate configuration from: " + file.toString() + " reverting to default configuration file (classpath)");
-		}
-		return configFile;
-	}
-
 	private static void readConfigFromProperties() {
-		File dir = new File(System.getProperty("user.home") + "/" + CONF_DIR);
+		File dir = new File(CONF_DIR);
 		File file = new File(dir.toString() + "/" + CONF_FILENAME_PROPERTIES);
 		if(dir.isDirectory()) {
 			if(file.isFile()) {
@@ -191,12 +64,12 @@ public class HarvestingManager {
 				try {
 					Properties prop = new Properties();
 					prop.load(new FileInputStream(file.toString()));
-					HarvestingManager.METHA_PATH = prop.getProperty("harvester.metha.path");
+					HarvestingManager.METHA_PATH = prop.getProperty("harvester.metha.path", METHA_PATH);
 					HarvestingManager.METHA_ID = METHA_PATH + "metha-id";
 					HarvestingManager.METHA_SYNC = METHA_PATH + "metha-sync";
-					HarvestingManager.EXPORT_DIRECTORY = prop.getProperty("harvester.export.dir");
-					HarvestingManager.GIT_PARENT_DIRECTORY = prop.getProperty("harvester.git.persistence.dir");
-					HarvestingManager.LICENCE_FILE = prop.getProperty("harvester.licences.file");
+					HarvestingManager.EXPORT_DIRECTORY = prop.getProperty("harvester.export.dir", EXPORT_DIRECTORY);
+					HarvestingManager.GIT_PARENT_DIRECTORY = prop.getProperty("harvester.git.persistence.dir", GIT_PARENT_DIRECTORY);
+					HarvestingManager.LICENCE_FILE = prop.getProperty("harvester.licences.file", LICENCE_FILE);
 				} catch (IOException e) {
 					e.printStackTrace();
 				}
@@ -208,57 +81,59 @@ public class HarvestingManager {
 		}
 	}
 
-	private static void initDatabase() {
-		// read config and create necessary objects
-		ServiceRegistry serviceRegistry;
-		File configFile = loadHibernateConfigFromDirectory();
-		if(configFile != null) {
-			serviceRegistry = new StandardServiceRegistryBuilder()
-					.configure(configFile).build();
-		} else {
-			serviceRegistry = new StandardServiceRegistryBuilder()
-					.configure(CONF_FILENAME_HIBERNATE).build();
-		}
-		Metadata metadata = new MetadataSources(serviceRegistry)
-				.getMetadataBuilder().build();
-		SchemaExport export = getSchemaExport();
-
-		// buildSessionFactory
-		try {
-			factory = metadata.buildSessionFactory();
-		} catch (Throwable ex) {
-			System.err.println("Failed to create sessionFactory object." + ex);
-			throw new ExceptionInInitializerError(ex);
-		}
-
-		// reset database when appropriate setting is true
-		if (RESET_DATABASE) {
-			resetDatabase(export, metadata);
-		}
-	}
-
-
 	public static void main(String[] args) {
-    	parseCommandLine(args);
-    	readConfigFromProperties();
-		initDatabase();
-		if (DELETE_ONLY_DATABASE) {
-			return;
-	    }
-		List<Repository> repositories = getActiveReposFromDB();
-		resetGitDirectory();
-		initDirectories();
-    	LicenceManager.initManager(factory, LICENCE_FILE);
-		if (!REHARVEST) {			
-			harvestFromGit(repositories);
-		} else {
-			doHarvest(repositories, null);
+
+		CommandLineHandler clHandler = new CommandLineHandler();
+    	if(clHandler.parseCommandLineArguments(args)) {
+    		// apply settings according to the command line arguments
+			// always start with the command line directory!
+			setConfDirFromCommandLine(clHandler);
+			DatabaseManager dbMan = new DatabaseManager(CONF_DIR);
+			applyCommandLineSettings(clHandler, dbMan);
+
+			logger.info("using configuration directory '{}'", CONF_DIR);
+
+			readConfigFromProperties();
+
+			dbMan.initializeRepositoriesFromJson();
+
+			List<Repository> repositories = dbMan.getActiveReposFromDB();
+			resetGitDirectory();
+			initDirectories();
+			LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
+			if (!REHARVEST) {
+				harvestFromGit(repositories, dbMan);
+			} else {
+				doHarvest(repositories, null, dbMan.getSessionFactory());
+			}
+			LicenceManager.writeLicencesToFile();
+			logger.info("Finished.");
 		}
-		LicenceManager.writeLicencesToFile();
-		logger.info("Finished.");
 	}
 
-	private static void harvestFromGit(List<Repository> repositories) {
+	private static void setConfDirFromCommandLine(CommandLineHandler clHandler) {
+		if(clHandler.FLAG_CONF_DIR) {
+			CONF_DIR = clHandler.SET_CONF_DIR;
+			logger.info("Setting configuration directory to: {}", CONF_DIR);
+		}
+	}
+
+	private static void applyCommandLineSettings(CommandLineHandler clHandler, DatabaseManager dbMan) {
+		if(clHandler.FLAG_INIT_DB) {
+			logger.info("Initializing the database");
+			dbMan.initializeDatabase();
+		}
+		if(clHandler.FLAG_RESET_DB) {
+			logger.info("RESETTING DATABASE, ALL DATA WILL BE LOST");
+			dbMan.resetDatabase();
+		}
+		if(clHandler.FLAG_REHARVEST) {
+			logger.info("Setting REHARVEST to: {}", clHandler.FLAG_REHARVEST);
+			REHARVEST = clHandler.FLAG_REHARVEST;
+		}
+	}
+
+	private static void harvestFromGit(List<Repository> repositories, DatabaseManager dbMan) {
 	    Hashtable<String, Set<Repository>> gitTags = queryGitTags(repositories);
 		Timestamp stateTimestamp = null;
 		// It is necessary to restore latest setting before following checkout,
@@ -312,7 +187,7 @@ public class HarvestingManager {
 					System.err.println("Caught InterruptedException: " + e.getMessage());
 				}
 			}
-			doHarvest(repositories, createTimestampFromTag(tag));
+			doHarvest(repositories, createTimestampFromTag(tag), dbMan.getSessionFactory());
 		} else {
 			Set<String> keySet = gitTags.keySet();
 			for (String key : keySet) {				
@@ -356,7 +231,7 @@ public class HarvestingManager {
 						System.err.println("Caught InterruptedException: " + e.getMessage());
 					}
 				}
-				doHarvest(new ArrayList<Repository>(repos), stateTimestamp);
+				doHarvest(new ArrayList<Repository>(repos), stateTimestamp, dbMan.getSessionFactory());
 			}
 		}	
 	}
@@ -369,7 +244,7 @@ public class HarvestingManager {
 		return Timestamp.valueOf(tagParts[0] + " " + tagParts[1].replace("-", ":"));
     }
     
-	private static void doHarvest(List<Repository> repositories, Timestamp stateTimestamp) {
+	private static void doHarvest(List<Repository> repositories, Timestamp stateTimestamp, SessionFactory factory) {
 		if (repositories != null) {
 
 		    NextStepsCaller nextStepsCaller = (repository, dataHarvester) -> {
@@ -493,72 +368,10 @@ public class HarvestingManager {
 		}		
 	}
 
-	private static void parseCommandLine(String[] args)
-	{
-        if(args.length > 0) {
-            logger.info("Parsing command line arguments");
-
-            CommandLine commandLine;
-            // TODO: remove this argument because it is dangerous in a production environment
-            Option reset_database_option = Option.builder("RESET")
-                    .required(false)
-                    .hasArg()
-                    .desc("Reset the database")
-                    .build();
-            // TODO: remove this argument because it is dangerous in a production environment
-            Option reharvest_option = Option.builder("REHARVEST")
-                    .required(false)
-                    .hasArg()
-                    .desc("Reharvest")
-                    .build();
-            Options options = new Options();
-            options.addOption(reset_database_option);
-            options.addOption(reharvest_option);
-            CommandLineParser parser = new DefaultParser();
-            try {
-                commandLine = parser.parse(options, args);
-                if(commandLine.hasOption("RESET")) {
-                    boolean reset_option_argument = Boolean.parseBoolean(commandLine.getOptionValue("RESET"));
-                    logger.info("Setting RESET_DATABASE to: {}", reset_option_argument);
-                    RESET_DATABASE = reset_option_argument;
-                }
-                if(commandLine.hasOption("REHARVEST")) {
-                    boolean reharvest_option_argument = Boolean.parseBoolean(commandLine.getOptionValue("REHARVEST"));
-                    logger.info("Setting REHARVEST to: {}", reharvest_option_argument);
-                    REHARVEST = reharvest_option_argument;
-                }
-            } catch (Exception e) {
-                logger.info("Error parsing command line options", e);
-            }
-        }
-    }
-
     private interface NextStepsCaller {
         void callNextStep(Repository repository, DataHarvester dataHarvester);
     }
 
-	public static void main2(String[] args) throws IOException {
-		initDatabase();
-		Session session = factory.openSession();
-		Transaction tx = session.beginTransaction();
-		Object id = null;
-
-		try {
-			HarvestingState test = session.get(HarvestingState.class, new Long(3));
-
-			for(LicenceCount licenceCount: test.getLicenceCounts()) {
-				logger.info("LicenceCount licence_name: {}, record_count: {}", licenceCount.getLicence_name(), licenceCount.getRecord_count());
-			}
-			tx.commit();
-		} catch (Exception e) {
-			if (tx != null) tx.rollback();
-			logger.info("Exception while creating DataModel for repo",  e);
-		} finally {
-			session.close();
-		}
-	}
-
-	
 	private static void harvestData(List<Repository> repositories, NextStepsCaller nextStepsCaller) {
         Map<DataHarvester, Repository> harvesterRepoMap = new HashMap<>();
         

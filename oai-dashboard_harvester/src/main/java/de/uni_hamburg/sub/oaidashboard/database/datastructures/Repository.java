@@ -53,6 +53,7 @@ public class Repository {
 
     @NotNull
     @Size(max=400)
+	@Column(unique=true)
 	private String harvesting_url;
 
 	private Timestamp first_index_timestamp;

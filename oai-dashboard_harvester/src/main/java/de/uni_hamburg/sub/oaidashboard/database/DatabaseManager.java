@@ -20,6 +20,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -141,8 +142,46 @@ public class DatabaseManager {
         logger.info("Finished loading repository from json...");
     }
 
+    public void updateRepositoryByIdFromJson(int repo_id, String repo_json_filename) {
+        logger.info("Starting updating repository by ID from json...");
+        List<Repository> repositories = getAllReposFromDB();
+        Repository target_repo = null;
+        for(Repository repository : repositories) {
+            if(repository.getId() == repo_id) {
+                target_repo = repository;
+                break;
+            }
+        }
+        if(target_repo == null) {
+            logger.info("found no repository with provided ID: {}", repo_id);
+        } else {
+            logger.info("repository before update: {}", target_repo);
+            RepositoryManager repoManager = new RepositoryManager(factory);
+            Repository transient_repo = repoManager.createTransientRepositoryFromJson(repo_json_filename);
+            target_repo.setName(transient_repo.getName());
+            target_repo.setHarvesting_url(transient_repo.getHarvesting_url());
+            target_repo.setLand(transient_repo.getLand());
+            target_repo.setBundesland(transient_repo.getBundesland());
+            target_repo.setGeodaten(transient_repo.getGeodaten());
+            target_repo.setTechnische_plattform(transient_repo.getTechnische_plattform());
+            target_repo.setKontakt(transient_repo.getKontakt());
+            target_repo.updateHash();
+            logger.info("repository after update: {}", target_repo);
+            repoManager.updateRepository(target_repo);
+        }
+        logger.info("Finished updating repository by ID from json...");
+    }
+
     public void listAllRepos() {
-        List<Repository> repositories = null;
+        List<Repository> repositories = getAllReposFromDB();
+
+        for(Repository repository : repositories) {
+            System.out.println(repository.toString());
+        }
+    }
+
+    private List<Repository> getAllReposFromDB() {
+        List<Repository> repositories = new ArrayList<>();
         Session session = factory.openSession();
         Transaction tx = null;
 
@@ -153,7 +192,6 @@ public class DatabaseManager {
             CriteriaQuery<Repository> criteria = builder.createQuery(Repository.class);
 
             Root<Repository> root = criteria.from(Repository.class);
-            //criteria.select(root).where(builder.equal(root.get("state"), "ACTIVE"));
             Query<Repository> q = session.createQuery(criteria);
             repositories = q.getResultList();
 
@@ -166,11 +204,7 @@ public class DatabaseManager {
         } finally {
             session.close();
         }
-        if(repositories != null) {
-            for(Repository repository : repositories) {
-                System.out.println(repository.toString());
-            }
-        }
+        return repositories;
     }
 
     public List<Repository> getActiveReposFromDB() {
@@ -204,4 +238,5 @@ public class DatabaseManager {
     public SessionFactory getSessionFactory() {
         return this.factory;
     }
+
 }

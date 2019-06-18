@@ -26,7 +26,8 @@ public class RepositoryManager {
         this.factory = factory;
     }
 
-    public void loadRepositoryFromJson(String repoFilePath) {
+    public Repository createTransientRepositoryFromJson(String repoFilePath) {
+        Repository repo = null;
         File jsonFile = new File(repoFilePath);
         try {
             String jsonContent = FileUtils.readFileToString(jsonFile, "utf-8");
@@ -41,18 +42,21 @@ public class RepositoryManager {
             String technische_plattform = jsonObject.has("technische_plattform") ? jsonObject.getString("technische_plattform") : "";
             String kontakt = jsonObject.has("kontakt") ? jsonObject.getString("kontakt") : "";
 
-            Repository repo = new Repository(name, url);
+            repo = new Repository(name, url);
             repo.setLand(land);
             repo.setBundesland(bundesland);
             repo.setGeodaten(geodaten);
             repo.setTechnische_plattform(technische_plattform);
             repo.setKontakt(kontakt);
 
-            saveRepository(repo);
-
         } catch (Exception e) {
             logger.error("An error occurred while loading a repository from json file: {}", repoFilePath, e);
         }
+        return repo;
+    }
+
+    public void loadRepositoryFromJson(String repoFilePath) {
+        saveRepository(createTransientRepositoryFromJson(repoFilePath));
     }
 
     public void loadRepositoriesFromJson(String repoFilePath, boolean fallback) {
@@ -118,5 +122,23 @@ public class RepositoryManager {
         saveBasicRepoInfo("OPuS \\u00e2\\u0080\\u0093 Volltextserver der HCU", "http://edoc.sub.uni-hamburg.de/hcu/oai2/oai2.php");
         saveBasicRepoInfo("Beispiel-Volltextrepository", "http://edoc.sub.uni-hamburg.de/hsu/oai2/oai2.php");
         saveBasicRepoInfo("HAW OPUS","http://edoc.sub.uni-hamburg.de/haw/oai2/oai2.php");
+    }
+
+    public void updateRepository(Repository repo) {
+        Session session = factory.openSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+            session.update(repo);
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
     }
 }

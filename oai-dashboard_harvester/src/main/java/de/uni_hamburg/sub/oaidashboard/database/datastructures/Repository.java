@@ -191,6 +191,10 @@ public class Repository {
 		this.state = state;
 	}
 
+	public void updateHash() {
+		this.initialDirectoryHash = createHash(this.harvesting_url);
+	}
+
 	private String createHash(String url) {
 		String hash = null;
 		try {

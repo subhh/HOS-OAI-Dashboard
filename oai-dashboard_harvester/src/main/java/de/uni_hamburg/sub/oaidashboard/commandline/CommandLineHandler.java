@@ -4,6 +4,10 @@ import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.List;
+
 
 public class CommandLineHandler {
 
@@ -25,6 +29,8 @@ public class CommandLineHandler {
     private static final String OPTION_LONG_LIST_REPOS = "list-repositories";
     private static final String OPTION_SHORT_ADD_REPO = "ar";
     private static final String OPTION_LONG_ADD_REPO = "add-repository";
+    private static final String OPTION_SHORT_UPDATE_REPO = "ur";
+    private static final String OPTION_LONG_UPDATE_REPO = "update-repository";
 
     // flags/flag-vars
     public boolean FLAG_RESET_DB = false;
@@ -35,7 +41,10 @@ public class CommandLineHandler {
     public boolean FLAG_START_HARVEST = false;
     public boolean FLAG_ONLY_UPDATE_LICENCES = false;
     public boolean FLAG_LIST_REPOSITORIES = false;
+
     public boolean FLAG_ADD_REPOSITORY = false;
+    public boolean FLAG_UPDATE_REPOSITORY = false;
+    public int SET_REPOSITORY_ID;
     public String SET_REPO_JSON_FILE = "";
 
     private static final String RESET_DATABASE_CONFIRMATION = "RESET-THE-DATABASE";
@@ -106,6 +115,19 @@ public class CommandLineHandler {
                     String repo_filename_arg = commandLine.getOptionValue(OPTION_SHORT_ADD_REPO);
                     SET_REPO_JSON_FILE = repo_filename_arg;
                 }
+                if(commandLine.hasOption(OPTION_SHORT_UPDATE_REPO)) {
+                    List<String> id_filepath = Arrays.asList(commandLine.getOptionValues(OPTION_SHORT_UPDATE_REPO));
+                    if(id_filepath.size() >= 2) {
+                        FLAG_UPDATE_REPOSITORY = true;
+                        int repository_id_arg = Integer.parseInt(id_filepath.get(0));
+                        String repo_filename_arg = id_filepath.get(1);
+                        SET_REPOSITORY_ID = repository_id_arg;
+                        SET_REPO_JSON_FILE = repo_filename_arg;
+                    } else {
+                        LOGGER.info("Too few arguments provided, see help for more information");
+                        success = false;
+                    }
+                }
             } catch (MissingOptionException e) {
                 LOGGER.info("Missing option(s): {}", String.join(",", e.getMissingOptions()));
                 showCommandLineHelp(options);
@@ -125,41 +147,35 @@ public class CommandLineHandler {
 
     private static void showCommandLineHelp(Options options) {
         HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.printHelp(" ", options);
+        helpFormatter.printHelp(" ", options, true);
     }
 
     private static Options setUpCommandLineOptions() {
         Options options = new Options();
 
         Option show_help_option = Option.builder(OPTION_SHORT_HELP)
-                .required(false)
                 .longOpt(OPTION_LONG_HELP)
                 .desc("show how to use the harvester from the command line")
                 .build();
         Option config_directory_option = Option.builder(OPTION_SHORT_CONF_DIR)
-                .required(false)
                 .longOpt(OPTION_LONG_CONF_DIR)
                 .hasArg()
                 .argName("configuration directory")
                 .desc("set the configuration directory (default: ~/.oaidashboard)")
                 .build();
         Option start_harvest_option = Option.builder(OPTION_START_HARVEST)
-                .required(false)
                 .desc("start harvesting with current configuration")
                 .build();
         Option initialize_database_option = Option.builder(OPTION_SHORT_INIT)
-                .required(false)
                 .longOpt(OPTION_LONG_INIT)
                 .desc("Initialize the database (should only done once when installing the harvester, data preservation " +
                         "not guaranteed)")
                 .build();
         Option only_update_licences_option = Option.builder(OPTION_SHORT_ONLY_UPDATE_LICENCES)
-                .required(false)
                 .longOpt(OPTION_LONG_ONLY_UPDATE_LICENCES)
                 .desc("only update licences from licences.json, NO OTHER OPERATIONS WILL TAKE PLACE")
                 .build();
         Option list_repositories_option = Option.builder(OPTION_SHORT_LIST_REPOS)
-                .required(false)
                 .longOpt(OPTION_LONG_LIST_REPOS)
                 .desc("List all repositories that are configured as harvesting targets")
                 .build();
@@ -169,7 +185,14 @@ public class CommandLineHandler {
                 .hasArg()
                 .argName("filepath").optionalArg(false)
                 .build();
-        // TODO: remove this argument because it is dangerous in a production environment
+        Option update_repository_option = Option.builder(OPTION_SHORT_UPDATE_REPO)
+                .longOpt(OPTION_LONG_UPDATE_REPO)
+                .desc("Update an existing repository from a json file by ID")
+                .hasArgs()
+                .numberOfArgs(2)
+                .argName("repository_ID> <filepath")
+                .build();
+        //TODO: remove this argument because it is dangerous in a production environment
         Option reset_database_option = Option.builder(OPTION_SHORT_RESET)
                 .required(false)
                 .longOpt(OPTION_LONG_RESET)
@@ -191,6 +214,7 @@ public class CommandLineHandler {
         options.addOption(only_update_licences_option);
         options.addOption(list_repositories_option);
         options.addOption(add_repository_option);
+        options.addOption(update_repository_option);
         options.addOption(reset_database_option);
         options.addOption(reharvest_option);
 

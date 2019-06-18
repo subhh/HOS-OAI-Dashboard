@@ -166,6 +166,12 @@ public class HarvestingManager {
 			dbMan.addRepositoryFromJson(clHandler.SET_REPO_JSON_FILE);
 			continue_operation = false;
 		}
+		if(clHandler.FLAG_UPDATE_REPOSITORY) {
+			logger.info("Only updating repository with provided id: {}, from json file: '{}'",
+					clHandler.SET_REPOSITORY_ID, clHandler.SET_REPO_JSON_FILE);
+			dbMan.updateRepositoryByIdFromJson(clHandler.SET_REPOSITORY_ID, clHandler.SET_REPO_JSON_FILE);
+			continue_operation = false;
+		}
 		return continue_operation;
 	}
 

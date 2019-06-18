@@ -132,7 +132,7 @@ public class Repository {
 	}
 
 	public void setGeodaten( String geodaten ) {
-		this.land = geodaten;
+		this.geodaten = geodaten;
 	}
 	
 	public String getTechnische_plattform() {

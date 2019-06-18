@@ -134,6 +134,13 @@ public class DatabaseManager {
         logger.info("Finished setting up repositories from json...");
     }
 
+    public void addRepositoryFromJson(String repo_json_filename) {
+        logger.info("Starting loading repository from json...");
+        RepositoryManager repoManager = new RepositoryManager(factory);
+        repoManager.loadRepositoryFromJson(repo_json_filename);
+        logger.info("Finished loading repository from json...");
+    }
+
     public void listAllRepos() {
         List<Repository> repositories = null;
         Session session = factory.openSession();

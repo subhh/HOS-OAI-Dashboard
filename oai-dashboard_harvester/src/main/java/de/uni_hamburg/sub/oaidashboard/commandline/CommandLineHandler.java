@@ -4,6 +4,7 @@ import org.apache.commons.cli.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+
 public class CommandLineHandler {
 
     // option names
@@ -20,8 +21,10 @@ public class CommandLineHandler {
     private static final String OPTION_START_HARVEST = "harvest";
     private static final String OPTION_SHORT_ONLY_UPDATE_LICENCES = "oul";
     private static final String OPTION_LONG_ONLY_UPDATE_LICENCES = "only-update-licences";
-    private static final String OPTION_SHORT_LIST_REPOS = "l";
+    private static final String OPTION_SHORT_LIST_REPOS = "lr";
     private static final String OPTION_LONG_LIST_REPOS = "list-repositories";
+    private static final String OPTION_SHORT_ADD_REPO = "ar";
+    private static final String OPTION_LONG_ADD_REPO = "add-repository";
 
     // flags/flag-vars
     public boolean FLAG_RESET_DB = false;
@@ -32,6 +35,8 @@ public class CommandLineHandler {
     public boolean FLAG_START_HARVEST = false;
     public boolean FLAG_ONLY_UPDATE_LICENCES = false;
     public boolean FLAG_LIST_REPOSITORIES = false;
+    public boolean FLAG_ADD_REPOSITORY = false;
+    public String SET_REPO_JSON_FILE = "";
 
     private static final String RESET_DATABASE_CONFIRMATION = "RESET-THE-DATABASE";
 
@@ -96,6 +101,11 @@ public class CommandLineHandler {
                 if(commandLine.hasOption(OPTION_SHORT_LIST_REPOS)) {
                     FLAG_LIST_REPOSITORIES = true;
                 }
+                if(commandLine.hasOption(OPTION_SHORT_ADD_REPO)) {
+                    FLAG_ADD_REPOSITORY = true;
+                    String repo_filename_arg = commandLine.getOptionValue(OPTION_SHORT_ADD_REPO);
+                    SET_REPO_JSON_FILE = repo_filename_arg;
+                }
             } catch (MissingOptionException e) {
                 LOGGER.info("Missing option(s): {}", String.join(",", e.getMissingOptions()));
                 showCommandLineHelp(options);
@@ -153,6 +163,12 @@ public class CommandLineHandler {
                 .longOpt(OPTION_LONG_LIST_REPOS)
                 .desc("List all repositories that are configured as harvesting targets")
                 .build();
+        Option add_repository_option = Option.builder(OPTION_SHORT_ADD_REPO)
+                .longOpt(OPTION_LONG_ADD_REPO)
+                .desc("Add a new repository from a json file as harvesting target")
+                .hasArg()
+                .argName("filepath").optionalArg(false)
+                .build();
         // TODO: remove this argument because it is dangerous in a production environment
         Option reset_database_option = Option.builder(OPTION_SHORT_RESET)
                 .required(false)
@@ -174,6 +190,7 @@ public class CommandLineHandler {
         options.addOption(initialize_database_option);
         options.addOption(only_update_licences_option);
         options.addOption(list_repositories_option);
+        options.addOption(add_repository_option);
         options.addOption(reset_database_option);
         options.addOption(reharvest_option);
 

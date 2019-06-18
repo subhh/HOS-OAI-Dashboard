@@ -8,7 +8,7 @@
         <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
         <property name = "hibernate.connection.username">example_db_user</property>
         <property name = "hibernate.connection.password">example_db_pass</property>
-        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8</property>
+        <property name = "hibernate.connection.url">jdbc:mysql://localhost:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC</property>
 
         <mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.Repository" />
  		<mapping class = "de.uni_hamburg.sub.oaidashboard.database.datastructures.HarvestingState" />

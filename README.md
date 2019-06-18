@@ -18,8 +18,7 @@ Install:
 - clone from GitHub
 - `mvn clean install`
 
-oai-dashboard_harvester: creates a standalone JAR-file
-
+oai-dashboard_harvester: creates a standalone JAR-file  
 oai-dashboard_rest: creates a standalone WAR-file
 
 ### Installation notes (Ubuntu 18)

@@ -122,8 +122,7 @@ public class LicenceManager {
 				licences.put(lic.getName(), new HashSet<> (Arrays.asList(lic)));
 			}	
 		}
-//		if (earliestChange.before(Timestamp.valueOf(LocalDateTime.now().minusHours(10)))) {
-		if (earliestChange.after(Timestamp.valueOf(LocalDateTime.now().minusHours(10)))) {
+		if (earliestChange.before(Timestamp.valueOf(LocalDateTime.now().minusHours(10)))) {
 			updateRecCountOA();
 		}
 	}

@@ -161,6 +161,11 @@ public class HarvestingManager {
 			dbMan.listAllRepos();
 			continue_operation = false;
 		}
+		if(clHandler.FLAG_ADD_REPOSITORY) {
+			logger.info("Only adding repository as harvesting target from json file: '{}'", clHandler.SET_REPO_JSON_FILE);
+			dbMan.addRepositoryFromJson(clHandler.SET_REPO_JSON_FILE);
+			continue_operation = false;
+		}
 		return continue_operation;
 	}
 

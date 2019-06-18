@@ -26,9 +26,38 @@ public class RepositoryManager {
         this.factory = factory;
     }
 
+    public void loadRepositoryFromJson(String repoFilePath) {
+        File jsonFile = new File(repoFilePath);
+        try {
+            String jsonContent = FileUtils.readFileToString(jsonFile, "utf-8");
+            JSONObject jsonObject = new JSONObject(jsonContent);
+            // mandatory
+            String name = jsonObject.getString("name");
+            String url = jsonObject.getString("url");
+            // not mandatory
+            String land = jsonObject.has("land") ? jsonObject.getString("land") : "";
+            String bundesland = jsonObject.has("bundesland") ? jsonObject.getString("bundesland") : "";
+            String geodaten = jsonObject.has("geodaten") ? jsonObject.getString("geodaten") : "";
+            String technische_plattform = jsonObject.has("technische_plattform") ? jsonObject.getString("technische_plattform") : "";
+            String kontakt = jsonObject.has("kontakt") ? jsonObject.getString("kontakt") : "";
+
+            Repository repo = new Repository(name, url);
+            repo.setLand(land);
+            repo.setBundesland(bundesland);
+            repo.setGeodaten(geodaten);
+            repo.setTechnische_plattform(technische_plattform);
+            repo.setKontakt(kontakt);
+
+            saveRepository(repo);
+
+        } catch (Exception e) {
+            logger.error("An error occurred while loading a repository from json file: {}", repoFilePath, e);
+        }
+    }
+
     public void loadRepositoriesFromJson(String repoFilePath, boolean fallback) {
         List<Map<String, String>> repositoriesData = new ArrayList<>();
-        File  jsonFile = new File(repoFilePath);
+        File jsonFile = new File(repoFilePath);
         try {
             String jsonContent = FileUtils.readFileToString(jsonFile, "utf-8");
             JSONArray jsonRepos = new JSONObject(jsonContent).getJSONArray("repositories");
@@ -39,7 +68,7 @@ public class RepositoryManager {
                 repositoriesData.add(repositoryData);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error(e);
             if(fallback) {
                 logger.info("Something went wrong with the provided repositories.json (expected here: {}), " +
                         "loading default repositories", jsonFile.getAbsolutePath());
@@ -49,13 +78,14 @@ public class RepositoryManager {
         setUpRepositories(repositoriesData);
     }
 
-    public void saveBasicRepoInfo(String name, String url) {
+    private void saveRepository(Repository repo) {
+        logger.info("attempting to persist repository into database: {}", repo.toString());
+
         Session session = factory.openSession();
         Transaction tx = null;
 
         try {
             tx = session.beginTransaction();
-            Repository repo = new Repository(name, url);
             session.save(repo);
             tx.commit();
         } catch (HibernateException e) {
@@ -66,6 +96,11 @@ public class RepositoryManager {
         } finally {
             session.close();
         }
+    }
+
+    private void saveBasicRepoInfo(String name, String url) {
+        Repository repo = new Repository(name, url);
+        saveRepository(repo);
     }
 
     private void setUpRepositories(List<Map<String, String>> repositoriesData) {

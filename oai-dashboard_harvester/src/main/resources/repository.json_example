@@ -1,0 +1,20 @@
+# EXAMPLE FILE!
+# COMMENTS OF ANY FORM ARE NOT ALLOWED IN JSON
+# DELETE ALL LINES STARTING WITH '#'
+#
+# Used for command line loading of a single repository (-ar /home/exampleuser/somefolder/filename.json)
+#
+# Mandatory fields: "name" and "url"
+# All other fields can either be left empty ("") or can be omitted completely
+#
+{
+    "name": "Beispiel Repository",
+    "url":  "http://beispiel.repo.de/oai/request",
+    "land": "Deutschland",
+    "bundesland": "Hamburg",
+    "geodaten": "1234567890",
+    "technische_plattform": "Docker Container",
+    "kontakt": "beispiel.repository@email.de"
+}
+
+

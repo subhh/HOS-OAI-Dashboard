@@ -20,6 +20,8 @@ public class CommandLineHandler {
     private static final String OPTION_START_HARVEST = "harvest";
     private static final String OPTION_SHORT_ONLY_UPDATE_LICENCES = "oul";
     private static final String OPTION_LONG_ONLY_UPDATE_LICENCES = "only-update-licences";
+    private static final String OPTION_SHORT_LIST_REPOS = "l";
+    private static final String OPTION_LONG_LIST_REPOS = "list-repositories";
 
     // flags/flag-vars
     public boolean FLAG_RESET_DB = false;
@@ -29,6 +31,7 @@ public class CommandLineHandler {
     public boolean FLAG_REHARVEST = false;
     public boolean FLAG_START_HARVEST = false;
     public boolean FLAG_ONLY_UPDATE_LICENCES = false;
+    public boolean FLAG_LIST_REPOSITORIES = false;
 
     private static final String RESET_DATABASE_CONFIRMATION = "RESET-THE-DATABASE";
 
@@ -90,6 +93,9 @@ public class CommandLineHandler {
                 if(commandLine.hasOption(OPTION_SHORT_ONLY_UPDATE_LICENCES)) {
                     FLAG_ONLY_UPDATE_LICENCES = true;
                 }
+                if(commandLine.hasOption(OPTION_SHORT_LIST_REPOS)) {
+                    FLAG_LIST_REPOSITORIES = true;
+                }
             } catch (MissingOptionException e) {
                 LOGGER.info("Missing option(s): {}", String.join(",", e.getMissingOptions()));
                 showCommandLineHelp(options);
@@ -142,6 +148,11 @@ public class CommandLineHandler {
                 .longOpt(OPTION_LONG_ONLY_UPDATE_LICENCES)
                 .desc("only update licences from licences.json, NO OTHER OPERATIONS WILL TAKE PLACE")
                 .build();
+        Option list_repositories_option = Option.builder(OPTION_SHORT_LIST_REPOS)
+                .required(false)
+                .longOpt(OPTION_LONG_LIST_REPOS)
+                .desc("List all repositories that are configured as harvesting targets")
+                .build();
         // TODO: remove this argument because it is dangerous in a production environment
         Option reset_database_option = Option.builder(OPTION_SHORT_RESET)
                 .required(false)
@@ -162,6 +173,7 @@ public class CommandLineHandler {
         options.addOption(start_harvest_option);
         options.addOption(initialize_database_option);
         options.addOption(only_update_licences_option);
+        options.addOption(list_repositories_option);
         options.addOption(reset_database_option);
         options.addOption(reharvest_option);
 

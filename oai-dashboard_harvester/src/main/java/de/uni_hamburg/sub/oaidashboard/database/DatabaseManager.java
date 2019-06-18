@@ -134,6 +134,38 @@ public class DatabaseManager {
         logger.info("Finished setting up repositories from json...");
     }
 
+    public void listAllRepos() {
+        List<Repository> repositories = null;
+        Session session = factory.openSession();
+        Transaction tx = null;
+
+        try {
+            tx = session.beginTransaction();
+
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<Repository> criteria = builder.createQuery(Repository.class);
+
+            Root<Repository> root = criteria.from(Repository.class);
+            //criteria.select(root).where(builder.equal(root.get("state"), "ACTIVE"));
+            Query<Repository> q = session.createQuery(criteria);
+            repositories = q.getResultList();
+
+            tx.commit();
+        } catch (HibernateException e) {
+            if (tx != null) {
+                tx.rollback();
+            }
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        if(repositories != null) {
+            for(Repository repository : repositories) {
+                System.out.println(repository.toString());
+            }
+        }
+    }
+
     public List<Repository> getActiveReposFromDB() {
         List<Repository> repositories = null;
         Session session = factory.openSession();

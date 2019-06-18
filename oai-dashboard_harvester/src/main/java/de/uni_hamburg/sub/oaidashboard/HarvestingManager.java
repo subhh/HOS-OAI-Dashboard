@@ -156,6 +156,11 @@ public class HarvestingManager {
 			LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
 			continue_operation = false;
 		}
+		if(clHandler.FLAG_LIST_REPOSITORIES) {
+			logger.info("Only listing configured repositories (harvesting targets)");
+			dbMan.listAllRepos();
+			continue_operation = false;
+		}
 		return continue_operation;
 	}
 

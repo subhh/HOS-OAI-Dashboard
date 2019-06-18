@@ -1,5 +1,8 @@
 package de.uni_hamburg.sub.oaidashboard.database.datastructures;
 
+import org.apache.commons.lang3.builder.StandardToStringStyle;
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -198,5 +201,27 @@ public class Repository {
 			System.err.println("Caught Exception: " + ex.getMessage());
 		}
 		return hash;
+	}
+
+	@Override
+	public String toString() {
+		StandardToStringStyle style = new StandardToStringStyle();
+		style.setFieldSeparator(", ");
+		style.setUseClassName(false);
+		style.setUseIdentityHashCode(false);
+		style.setFieldNameValueSeparator(" = ");
+		style.setNullText("");
+		String a = "'";
+		return new ToStringBuilder(this, style)
+				.append("ID", repository_id)
+				.append("name", a + name + a)
+				.append("harvesting_url", a + harvesting_url + a)
+				.append("land",  a + land + a)
+				.append("bundesland", a + bundesland + a)
+				.append("geodaten", a + geodaten + a)
+				.append("technische_plattform", a + technische_plattform + a)
+				.append("kontakt", a + kontakt + a)
+				.append("state", a + state + a)
+				.toString().replace("'null'", "''");
 	}
 }

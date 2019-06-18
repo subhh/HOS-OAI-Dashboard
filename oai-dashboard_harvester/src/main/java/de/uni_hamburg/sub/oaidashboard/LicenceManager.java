@@ -13,6 +13,7 @@ import org.hibernate.Transaction;
 import org.hibernate.query.Query;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -26,6 +27,7 @@ public class LicenceManager {
     private static Logger logger = LogManager.getLogger(Class.class.getName());
     private static JsonParser licenceJsonParser;
     private static Set<JsonLicence> jLicenceSet;
+    private static Timestamp earliestChange = Timestamp.valueOf(LocalDateTime.now());
     
 	public static void initManager(SessionFactory factory, String licenceFile) {
 		LicenceManager.factory = factory;
@@ -47,6 +49,9 @@ public class LicenceManager {
 					// type has changed, without timestamp restrictions
 					if (jlic.validFrom.equals(dblic.getValidFrom()) && (jlic.validUntil == dblic.getValidUntil() || jlic.validUntil.equals(dblic.getValidUntil()))) {
 						if (dblic.getType() != jlic.licence_type) {
+							if (dblic.getValidFrom().before(earliestChange)) {
+								earliestChange = dblic.getValidFrom();
+							}
 							dblic.setType(jlic.licence_type);
 							updateLicence(dblic);
 							updateLicenceCount(dblic);
@@ -61,6 +66,9 @@ public class LicenceManager {
 					// Caution: This will only work for exactly one additional licencetype/date combo (hopefully the only case) 
 					// This is "the second entry" (see above), the licence of this type is expected to be actually valid.
 					else if (dblic.getType() != jlic.licence_type && jlic.validFrom.after(dblic.getValidFrom())) {
+						if (dblic.getValidFrom().before(earliestChange)) {
+							earliestChange = dblic.getValidFrom();
+						}
 						Licence lic = new Licence(jlic.licence_name);
 						lic.setType(jlic.licence_type);
 						lic.setValidFrom(jlic.validFrom);
@@ -93,6 +101,9 @@ public class LicenceManager {
 					};
 					// add (3):
 					if (!found) {
+						if (jlic.validFrom.before(earliestChange)) {
+							earliestChange = jlic.validFrom;
+						}
 						Licence lic = new Licence(jlic.licence_name);
 						lic.setType(jlic.licence_type);
 						lic.setValidFrom(jlic.validFrom);
@@ -110,6 +121,10 @@ public class LicenceManager {
 				storeNewLicence(lic);
 				licences.put(lic.getName(), new HashSet<> (Arrays.asList(lic)));
 			}	
+		}
+//		if (earliestChange.before(Timestamp.valueOf(LocalDateTime.now().minusHours(10)))) {
+		if (earliestChange.after(Timestamp.valueOf(LocalDateTime.now().minusHours(10)))) {
+			updateRecCountOA();
 		}
 	}
 
@@ -211,6 +226,30 @@ public class LicenceManager {
 		return licenceset;
 	}
 	
+	private static void updateRecCountOA() {
+		Session session = factory.openSession();
+		Transaction tx = session.beginTransaction();
+
+		// As JPA per v2.1 does not allow update queries, the following is formed as native query 
+		Query query = session.createNativeQuery("UPDATE HARVESTINGSTATE hs INNER JOIN ("
+				+ "SELECT SUM(lc.record_count) oa_count, lc.state_id FROM LICENCECOUNT lc WHERE "
+				+ "lc.licence_type='OPEN' and lc.state_id>=(SELECT MIN(hs.state_id) FROM HARVESTINGSTATE hs "
+				+ "WHERE hs.timestamp >= :earlyTS ) GROUP by lc.state_id) lcrc on "
+				+ "lcrc.state_id = hs.state_id SET hs.record_count_oa = lcrc.oa_count");
+		query.setParameter("earlyTS", earliestChange);
+		try {
+			int rowsAffected = query.executeUpdate();
+			logger.info("Updated " + rowsAffected + " row(s) in HARVESTINGSTATE with"
+					+ " a change of the openAccess recordCount");
+		}
+		catch (HibernateException e) {
+			if (tx!=null) tx.rollback();
+			e.printStackTrace();
+		} finally {
+			session.close();
+		}
+	}
+
 	private static void updateLicenceCount(Licence jlic) {
 		Session session = factory.openSession();
 		Transaction tx = session.beginTransaction();

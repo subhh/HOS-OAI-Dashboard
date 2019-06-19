@@ -1,5 +1,7 @@
 package de.uni_hamburg.sub.oaidashboard.database.datastructures;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang3.builder.StandardToStringStyle;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
@@ -25,6 +27,7 @@ public class Repository {
 	@GeneratedValue(strategy=GenerationType.IDENTITY)
 	private int repository_id;
 
+	@JsonIgnore
 	@NotNull
 	@Size(max=150)
 	private String initialDirectoryHash;

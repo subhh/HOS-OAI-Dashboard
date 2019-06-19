@@ -239,4 +239,32 @@ public class DatabaseManager {
         return this.factory;
     }
 
+    private void updateRepositoryStateById(int repo_id, String state) {
+        List<Repository> repositories = getAllReposFromDB();
+        Repository target_repo = null;
+        for(Repository repository : repositories) {
+            if(repository.getId() == repo_id) {
+                target_repo = repository;
+                break;
+            }
+        }
+        if(target_repo == null) {
+            logger.info("found no repository with provided ID: {}", repo_id);
+        } else {
+            target_repo.setState(state);
+            new RepositoryManager(factory).updateRepository(target_repo);
+        }
+    }
+
+    public void activateRepositoryById(int repo_id) {
+        logger.info("Start activating repository by ID ...");
+        updateRepositoryStateById(repo_id, "ACTIVE");
+        logger.info("Finished activating repository by ID...");
+    }
+
+    public void disableRepositoryById(int repo_id) {
+        logger.info("Start disabling repository by ID ...");
+        updateRepositoryStateById(repo_id, "DISABLED");
+        logger.info("Finished disabling repository by ID...");
+    }
 }

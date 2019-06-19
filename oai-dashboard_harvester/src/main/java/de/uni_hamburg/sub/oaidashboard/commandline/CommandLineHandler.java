@@ -25,12 +25,16 @@ public class CommandLineHandler {
     private static final String OPTION_START_HARVEST = "harvest";
     private static final String OPTION_SHORT_ONLY_UPDATE_LICENCES = "oul";
     private static final String OPTION_LONG_ONLY_UPDATE_LICENCES = "only-update-licences";
-    private static final String OPTION_SHORT_LIST_REPOS = "lr";
-    private static final String OPTION_LONG_LIST_REPOS = "list-repositories";
-    private static final String OPTION_SHORT_ADD_REPO = "ar";
-    private static final String OPTION_LONG_ADD_REPO = "add-repository";
-    private static final String OPTION_SHORT_UPDATE_REPO = "ur";
-    private static final String OPTION_LONG_UPDATE_REPO = "update-repository";
+    private static final String OPTION_SHORT_LIST_REPOS = "rlist";
+    private static final String OPTION_LONG_LIST_REPOS = "repositories-list";
+    private static final String OPTION_SHORT_ADD_REPO = "radd";
+    private static final String OPTION_LONG_ADD_REPO = "repository-add";
+    private static final String OPTION_SHORT_UPDATE_REPO = "rupdate";
+    private static final String OPTION_LONG_UPDATE_REPO = "repository-update";
+    private static final String OPTION_SHORT_ACTIVATE_REPO = "ractivate";
+    private static final String OPTION_LONG_ACTIVATE_REPO = "repository-activate";
+    private static final String OPTION_SHORT_DISABLE_REPO = "rdisable";
+    private static final String OPTION_LONG_DISABLE_REPO = "repository-disable";
 
     // flags/flag-vars
     public boolean FLAG_RESET_DB = false;
@@ -44,6 +48,8 @@ public class CommandLineHandler {
 
     public boolean FLAG_ADD_REPOSITORY = false;
     public boolean FLAG_UPDATE_REPOSITORY = false;
+    public boolean FLAG_ACTIVATE_REPOSITORY = false;
+    public boolean FLAG_DISABLE_REPOSITORY = false;
     public int SET_REPOSITORY_ID;
     public String SET_REPO_JSON_FILE = "";
 
@@ -115,6 +121,16 @@ public class CommandLineHandler {
                     String repo_filename_arg = commandLine.getOptionValue(OPTION_SHORT_ADD_REPO);
                     SET_REPO_JSON_FILE = repo_filename_arg;
                 }
+                if(commandLine.hasOption(OPTION_SHORT_ACTIVATE_REPO)) {
+                    FLAG_ACTIVATE_REPOSITORY = true;
+                    int repository_id_arg = Integer.parseInt(commandLine.getOptionValue(OPTION_SHORT_ACTIVATE_REPO));
+                    SET_REPOSITORY_ID = repository_id_arg;
+                }
+                if(commandLine.hasOption(OPTION_SHORT_DISABLE_REPO)) {
+                    FLAG_DISABLE_REPOSITORY = true;
+                    int repository_id_arg = Integer.parseInt(commandLine.getOptionValue(OPTION_SHORT_DISABLE_REPO));
+                    SET_REPOSITORY_ID = repository_id_arg;
+                }
                 if(commandLine.hasOption(OPTION_SHORT_UPDATE_REPO)) {
                     List<String> id_filepath = Arrays.asList(commandLine.getOptionValues(OPTION_SHORT_UPDATE_REPO));
                     if(id_filepath.size() >= 2) {
@@ -147,6 +163,7 @@ public class CommandLineHandler {
 
     private static void showCommandLineHelp(Options options) {
         HelpFormatter helpFormatter = new HelpFormatter();
+        helpFormatter.setWidth(100);
         helpFormatter.printHelp(" ", options, true);
     }
 
@@ -192,6 +209,20 @@ public class CommandLineHandler {
                 .numberOfArgs(2)
                 .argName("repository_ID> <filepath")
                 .build();
+        Option activate_repository_option = Option.builder(OPTION_SHORT_ACTIVATE_REPO)
+                .longOpt(OPTION_LONG_ACTIVATE_REPO)
+                .desc("Set the state of a repository by ID to ACTIVE (will be harvested)")
+                .hasArg()
+                .numberOfArgs(1)
+                .argName("repository_ID")
+                .build();
+        Option disable_repository_option = Option.builder(OPTION_SHORT_DISABLE_REPO)
+                .longOpt(OPTION_LONG_DISABLE_REPO)
+                .desc("Set the state of a repository by ID to DISABLED (will NOT be harvested)")
+                .hasArg()
+                .numberOfArgs(1)
+                .argName("repository_ID")
+                .build();
         //TODO: remove this argument because it is dangerous in a production environment
         Option reset_database_option = Option.builder(OPTION_SHORT_RESET)
                 .required(false)
@@ -215,8 +246,10 @@ public class CommandLineHandler {
         options.addOption(list_repositories_option);
         options.addOption(add_repository_option);
         options.addOption(update_repository_option);
+        options.addOption(activate_repository_option);
+        options.addOption(disable_repository_option);
         options.addOption(reset_database_option);
-        options.addOption(reharvest_option);
+        //options.addOption(reharvest_option);
 
         return options;
     }

@@ -98,8 +98,6 @@ public class HarvestingManager {
 
 				readConfigFromProperties();
 
-				//dbMan.initializeRepositoriesFromJson();
-
 				List<Repository> repositories = dbMan.getActiveReposFromDB();
 				resetGitDirectory(); // TODO: evaluate if this must be called only when START_HARVEST is true
 				initDirectories();
@@ -172,6 +170,16 @@ public class HarvestingManager {
 			dbMan.updateRepositoryByIdFromJson(clHandler.SET_REPOSITORY_ID, clHandler.SET_REPO_JSON_FILE);
 			continue_operation = false;
 		}
+		if(clHandler.FLAG_ACTIVATE_REPOSITORY) {
+			logger.info("Only setting state to ACTIVE for repository with provided id: {}", clHandler.SET_REPOSITORY_ID);
+			dbMan.activateRepositoryById(clHandler.SET_REPOSITORY_ID);
+			continue_operation = false;
+		}
+		if(clHandler.FLAG_DISABLE_REPOSITORY) {
+            logger.info("Only setting state to DISABLED for repository with provided id: {}", clHandler.SET_REPOSITORY_ID);
+            dbMan.disableRepositoryById(clHandler.SET_REPOSITORY_ID);
+            continue_operation = false;
+        }
 		return continue_operation;
 	}
 

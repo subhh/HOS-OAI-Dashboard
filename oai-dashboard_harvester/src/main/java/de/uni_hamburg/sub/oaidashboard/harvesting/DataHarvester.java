@@ -31,7 +31,8 @@ public class DataHarvester extends Thread {
     private final String metaSyncPath;
     private final String gitParentDirectory;
     private final String exportDirectory;
-    private final String methaUrlString;
+    private final String gitDirectoryString;
+    private String methaUrlString;
     private String gitDirectory;
 
     private boolean reharvest;
@@ -49,10 +50,11 @@ public class DataHarvester extends Thread {
 
     private static Logger logger = LogManager.getLogger(Class.class.getName());
 
-    public DataHarvester(String harvestingURL, String mUS, String mip, String msp,
+    public DataHarvester(String harvestingURL, String gDS, String mip, String msp,
                   String gpd, String ed, boolean reharvest) {
         this.harvestingURL = harvestingURL;
-        this.methaUrlString = mUS;
+        this.gitDirectoryString = gDS;
+        this.methaUrlString = createHash(harvestingURL);
         this.metaIdPath = mip;
         this.metaSyncPath = msp;
         this.gitParentDirectory = gpd;
@@ -73,7 +75,7 @@ public class DataHarvester extends Thread {
         this.startTime = new Timestamp(Calendar.getInstance().getTime().getTime());
 
         try {
-            gitDirectory = new File(gitParentDirectory + File.separator + methaUrlString).getCanonicalPath();
+            gitDirectory = new File(gitParentDirectory + File.separator + gitDirectoryString).getCanonicalPath();
             ensureGit();
 
             MethaIdStructure instance = getMetaIdAnswer();
@@ -108,14 +110,6 @@ public class DataHarvester extends Thread {
     	{
         	gitDirFile.mkdir();
     	}
-        
-        // clear git directory -> already done in HarvestingManager->resetGitDirectory
-//        for (File filepath: gitDirFile.listFiles()) {
-//        	if (filepath.isFile()) {
-//        		filepath.delete();
-//        	}
-//        }
-
         if (new File(gitDirectory + File.separator + ".git").exists())
     	{
     		return;
@@ -239,6 +233,19 @@ public class DataHarvester extends Thread {
         }
         return records;
     }
+    
+	private String createHash(String url) {
+		String hash = null;
+		try {
+			hash = (String) File.separator 
+	    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
+	    					("#oai_dc#" + url).getBytes("UTF-8"));
+		}
+		catch (UnsupportedEncodingException ex) {
+			System.err.println("Caught Exception: " + ex.getMessage());
+		}
+		return hash;
+	}
 
     public List<Format> getMetadataFormats() {
         return metadataFormats;

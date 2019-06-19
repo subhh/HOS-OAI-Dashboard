@@ -5,7 +5,8 @@
     <session-factory>
         <property name = "hibernate.dialect">org.hibernate.dialect.MySQL8Dialect</property>
         <property name = "hibernate.dialect.storage_engine">innodb</property> 
-        <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property>
+        <!-- <property name = "hibernate.connection.driver_class">com.mysql.jdbc.Driver</property> -->
+        <property name = "hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
         <property name = "hibernate.connection.username">example_db_user</property>
         <property name = "hibernate.connection.password">example_db_pass</property>
         <property name = "hibernate.connection.url">jdbc:mysql://db:3306/example_db?useUnicode=yes&amp;characterEncoding=UTF-8&amp;useJDBCCompliantTimezoneShift=true&amp;useLegacyDatetimeCode=false&amp;serverTimezone=UTC</property>

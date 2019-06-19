@@ -1,0 +1,8 @@
+{
+  "mappings_dc_type":
+  {
+      "doktorarbeit": ["doc-type:thesis", "doc-type:dis"],
+      "masterarbeit": ["doc-type:masterThesis"],
+      "book": ["doc-type:book"]
+  }
+}

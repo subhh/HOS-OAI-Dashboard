@@ -1,6 +1,7 @@
 package de.uni_hamburg.sub.oaidashboard.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.uni_hamburg.sub.oaidashboard.ConfigurationManager;
 import de.uni_hamburg.sub.oaidashboard.database.datastructures.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -17,7 +18,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.io.IOException;
+import java.io.*;
 import java.sql.Timestamp;
 import java.util.*;
 import java.text.DateFormat;
@@ -50,6 +51,9 @@ public class RestApi {
         }
 
         List<HarvestingState> stateList = getAllStatesFromDB(safe_timepoint);
+
+        applyMappings(stateList);
+
         String json_state = "{}"; // by default return minimal valid json data
         if(stateList.size() > 0) {
             HarvestingState combinedState = createCombinedState(stateList);
@@ -201,6 +205,39 @@ public class RestApi {
         return dcTypeCounts;
     }
 
+    private Set<DCTypeCount> getMergedDCTypeCounts(HarvestingState state) {
+        Set<DCTypeCount> dcTypeCounts = new HashSet<>();
+        Function<Object, String> identityFunc = object -> ((DCTypeCount) object).getDc_Type();
+
+        Map<String, List<DCTypeCount>> grouping = new HashMap<>();
+        for (DCTypeCount dcTypeCount : state.getDCTypeCounts()) {
+            String dc_type = dcTypeCount.getDc_Type();
+            if (!grouping.containsKey(dc_type)) {
+                grouping.put(dc_type, new ArrayList<>());
+            }
+            grouping.get(dc_type).add(dcTypeCount);
+        }
+
+        for(Map.Entry<String, List<DCTypeCount>> groupEntry : grouping.entrySet()) {
+            if(groupEntry.getValue().size() > 1) {
+                int record_count_all = 0;
+                for (DCTypeCount identicalDCTypeCount : groupEntry.getValue()) {
+                    record_count_all += identicalDCTypeCount.getRecord_count();
+                }
+                DCTypeCount mergedDCTypeCount = new DCTypeCount();
+                mergedDCTypeCount.setRecord_count(record_count_all);
+                mergedDCTypeCount.setDc_Type(groupEntry.getKey());
+                mergedDCTypeCount.setId(-1);
+                dcTypeCounts.add(mergedDCTypeCount);
+            } else {
+                if(groupEntry.getValue().size() == 1) {
+                    dcTypeCounts.add(groupEntry.getValue().get(0));
+                }
+            }
+        }
+        return dcTypeCounts;
+    }
+
     private Map<String, List<Object>> groupTargetSetOfStateById(List<HarvestingState> stateList,
                                                                 Function<HarvestingState, Set<Object>> tFunc,
                                                                 Function<Object, String> idFunc) {
@@ -254,6 +291,9 @@ public class RestApi {
         }
 
         HarvestingState state = getStateFromDB(safe_repo_id, safe_timepoint);
+
+        applyMappings(state);
+
         ObjectMapper objectMapper = new ObjectMapper();
         String json_state = "{}"; // by default return minimal valid json data
         if(state != null) {
@@ -291,9 +331,34 @@ public class RestApi {
         }
 
         List<HarvestingState> stateList = getStatesFromDB(save_repo_id, save_timepoint_from, save_timepoint_to);
+
+        applyMappings(stateList);
+
         ObjectMapper objectMapper = new ObjectMapper();
         String json_state = objectMapper.writeValueAsString(stateList);
         return json_state;
+    }
+
+    private void applyMappings(HarvestingState state) {
+        List<HarvestingState> stateList = new ArrayList<>();
+        stateList.add(state);
+        applyMappings(stateList);
+    }
+
+    private void applyMappings(List<HarvestingState> stateList) {
+        ConfigurationManager configMan = new ConfigurationManager();
+        Map<String, String> mappings = configMan.getReverseDCTypeMappings();
+        for(HarvestingState state : stateList) {
+            // apply dc type mapping
+            for(DCTypeCount dcTypeCount : state.getDCTypeCounts()) {
+                if(mappings.containsKey(dcTypeCount.getDc_Type())) {
+                    //logger.info("Mapping {} to {}", dcTypeCount.getDc_Type(), mappings.get(dcTypeCount.getDc_Type()));
+                    dcTypeCount.setDc_Type(mappings.get(dcTypeCount.getDc_Type()));
+                }
+            }
+            Set<DCTypeCount> mergedDCTypeCounts = getMergedDCTypeCounts(state);
+            state.setDCTypeCounts(mergedDCTypeCounts);
+        }
     }
 
     private List<HarvestingState> getAllStatesFromDB(Date timepoint) {

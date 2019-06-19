@@ -165,7 +165,6 @@ public class DatabaseManager {
             target_repo.setGeodaten(transient_repo.getGeodaten());
             target_repo.setTechnische_plattform(transient_repo.getTechnische_plattform());
             target_repo.setKontakt(transient_repo.getKontakt());
-            target_repo.updateHash();
             logger.info("repository after update: {}", target_repo);
             repoManager.updateRepository(target_repo);
         }

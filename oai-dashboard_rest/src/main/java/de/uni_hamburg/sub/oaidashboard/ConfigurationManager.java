@@ -18,39 +18,43 @@ public class ConfigurationManager {
     private static Logger logger = LogManager.getLogger(ConfigurationManager.class.getName());
 
     private Map<String, String> reverseDCTypeMappings = new HashMap<>();
+    private Map<String, String> reverseLicenceMappings = new HashMap<>();
+
 
     public ConfigurationManager() {
         String conf_dir = getConfigurationDirectory();
         if(conf_dir != null) {
             logger.info("loading config/mapping files from directory: {}", conf_dir);
-            loadMappingsDCType(conf_dir);
+            loadMappings(conf_dir);
         } else {
             logger.info("loading config/mapping files from resources folder (src/main/resources), provided at compile time");
-            loadMappingsDCType();
+            loadMappings();
         }
     }
 
-    private void loadMappingsDCType(String conf_dir) {
-        String mappingFilePath = conf_dir + "/" + "mappings_dc_type.json";
-        logger.info("loading mappings for dc type from file: {}", mappingFilePath);
+    private void loadMappings(String conf_dir) {
+        String mappingFilePath = conf_dir + "/" + "mappings.json";
+        logger.info("loading mappings from file: {}", mappingFilePath);
         File mappingFile = new File(mappingFilePath);
         loadMappingsDCType(mappingFile);
+        loadMappingsLicences(mappingFile);
     }
 
-    private void loadMappingsDCType() {
-        String mappingFileName = "mappings_dc_type.json";
-        logger.info("loading mappings for dc type from file: {}", mappingFileName);
+    private void loadMappings() {
+        String mappingFileName = "mappings.json";
+        logger.info("loading mappings from file: {}", mappingFileName);
         File mappingFile = new File(getClass().getClassLoader().getResource(mappingFileName).getFile());
         loadMappingsDCType(mappingFile);
+        loadMappingsLicences(mappingFile);
     }
 
-    private void loadMappingsDCType(File mappingFile) {
+    private Map<String, String> loadMappings(File mappingFile, String mappingType) {
         Map<String, List<String>> mappings = new HashMap<>();
         Map<String, String> reverseMappings = new HashMap<>();
 
         try {
             String jsonContent = FileUtils.readFileToString(mappingFile, "utf-8");
-            JSONObject jsonMappings = new JSONObject(jsonContent).getJSONObject("mappings_dc_type");
+            JSONObject jsonMappings = new JSONObject(jsonContent).getJSONObject(mappingType);
             for(String jsonKey : jsonMappings.keySet()) {
                 JSONArray jsonValues = jsonMappings.getJSONArray(jsonKey);
 
@@ -67,11 +71,24 @@ public class ConfigurationManager {
         }
         logger.info("loaded mappings: {}", mappings);
         logger.info("loaded reverseMappings: {}", reverseMappings);
-        this.reverseDCTypeMappings = reverseMappings;
+        //this.reverseDCTypeMappings = reverseMappings;
+        return reverseMappings;
+    }
+
+    private void loadMappingsDCType(File mappingFile) {
+        this.reverseDCTypeMappings = loadMappings(mappingFile, "mappings_dc_type");
+    }
+
+    private void loadMappingsLicences(File mappingFile) {
+        this.reverseLicenceMappings = loadMappings(mappingFile, "mappings_licences");
     }
 
     public Map<String, String> getReverseDCTypeMappings() {
         return this.reverseDCTypeMappings;
+    }
+
+    public Map<String, String> getReverseLicenceMappings() {
+        return this.reverseLicenceMappings;
     }
 
     private String getConfigurationDirectory() {

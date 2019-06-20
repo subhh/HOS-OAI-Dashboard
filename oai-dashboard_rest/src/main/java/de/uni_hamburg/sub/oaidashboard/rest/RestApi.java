@@ -12,6 +12,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
+import org.jvnet.hk2.internal.Collector;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -25,6 +26,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Path("/api")
 @Api(value="/", description="Test" )
@@ -238,6 +240,51 @@ public class RestApi {
         return dcTypeCounts;
     }
 
+    private Set<LicenceCount> getMergedLicenceCounts(HarvestingState state) {
+        Set<LicenceCount> licenceCounts = new HashSet<>();
+
+        Map<String, List<LicenceCount>> grouping = new HashMap<>();
+        for (LicenceCount licenceCount : state.getLicenceCounts()) {
+            String licence_name = licenceCount.getLicence_name();
+            if (!grouping.containsKey(licence_name)) {
+                grouping.put(licence_name, new ArrayList<>());
+            }
+            grouping.get(licence_name).add(licenceCount);
+        }
+
+        for(Map.Entry<String, List<LicenceCount>> groupEntry : grouping.entrySet()) {
+            if(groupEntry.getValue().size() > 1) {
+                int record_count_all = 0;
+                Set<LicenceType> licence_types = new HashSet<>();
+                for (LicenceCount identicalLicenceCount : groupEntry.getValue()) {
+                    record_count_all += identicalLicenceCount.getRecord_count();
+                    licence_types.add(identicalLicenceCount.getLicence_type());
+                }
+                LicenceCount mergedLicenceCount = new LicenceCount();
+                mergedLicenceCount.setRecord_count(record_count_all);
+                mergedLicenceCount.setLicence_name(groupEntry.getKey());
+                mergedLicenceCount.setId(-1);
+
+                // handle licence types
+                if(licence_types.size() == 1) {
+                    mergedLicenceCount.setLicence_type(licence_types.iterator().next());
+                } else {
+                    logger.info("Found conflicting Licence Types when merging LicenceCounts to: {}",
+                            groupEntry.getKey());
+                    logger.info("Using Licence Type 'UNKNOWN'");
+                    mergedLicenceCount.setLicence_type(LicenceType.UNKNOWN);
+                }
+
+                licenceCounts.add(mergedLicenceCount);
+            } else {
+                if(groupEntry.getValue().size() == 1) {
+                    licenceCounts.add(groupEntry.getValue().get(0));
+                }
+            }
+        }
+        return licenceCounts;
+    }
+
     private Map<String, List<Object>> groupTargetSetOfStateById(List<HarvestingState> stateList,
                                                                 Function<HarvestingState, Set<Object>> tFunc,
                                                                 Function<Object, String> idFunc) {
@@ -347,17 +394,29 @@ public class RestApi {
 
     private void applyMappings(List<HarvestingState> stateList) {
         ConfigurationManager configMan = new ConfigurationManager();
-        Map<String, String> mappings = configMan.getReverseDCTypeMappings();
+        Map<String, String> mappings_dc_type = configMan.getReverseDCTypeMappings();
+        Map<String, String> mappings_licences = configMan.getReverseLicenceMappings();
+
         for(HarvestingState state : stateList) {
             // apply dc type mapping
             for(DCTypeCount dcTypeCount : state.getDCTypeCounts()) {
-                if(mappings.containsKey(dcTypeCount.getDc_Type())) {
+                if(mappings_dc_type.containsKey(dcTypeCount.getDc_Type())) {
                     //logger.info("Mapping {} to {}", dcTypeCount.getDc_Type(), mappings.get(dcTypeCount.getDc_Type()));
-                    dcTypeCount.setDc_Type(mappings.get(dcTypeCount.getDc_Type()));
+                    dcTypeCount.setDc_Type(mappings_dc_type.get(dcTypeCount.getDc_Type()));
                 }
             }
             Set<DCTypeCount> mergedDCTypeCounts = getMergedDCTypeCounts(state);
             state.setDCTypeCounts(mergedDCTypeCounts);
+
+            // apply licences mapping
+            for(LicenceCount licenceCount : state.getLicenceCounts()) {
+                if(mappings_licences.containsKey(licenceCount.getLicence_name())) {
+                    //logger.info("Mapping {} to {}", licenceCount.getLicence_name(), mappings_licences.get(licenceCount.getLicence_name()));
+                    licenceCount.setLicence_name(mappings_licences.get(licenceCount.getLicence_name()));
+                }
+            }
+            Set<LicenceCount> mergedLicenceCounts = getMergedLicenceCounts(state);
+            state.setLicenceCounts(mergedLicenceCounts);
         }
     }
 

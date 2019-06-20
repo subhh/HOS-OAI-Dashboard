@@ -1,0 +1,13 @@
+{
+  "mappings_dc_type":
+  {
+      "doktorarbeit": ["doc-type:thesis", "doc-type:dis"],
+      "masterarbeit": ["doc-type:masterThesis"],
+      "book": ["doc-type:book"]
+  },
+  "mappings_licences":
+  {
+      "Creative Commons Namensnennung": ["CC BY NC 3.0", "CC BY 4.0"],
+      "Eingeschränkter Zugriff": ["info:eu-repo/semantics/embargoedAccess"]
+  }
+}

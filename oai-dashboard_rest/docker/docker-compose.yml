@@ -22,5 +22,6 @@ web:
    - "80:8080"
   volumes:
    - ./tomcat/webapps:/usr/local/tomcat/webapps
+   - $HOME/.oai-dashboard:/root/.oai-dashboard
   links:
     - db

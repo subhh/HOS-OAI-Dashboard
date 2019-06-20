@@ -5,6 +5,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,6 +24,7 @@ public class CommandLineHandler {
     private static final String OPTION_SHORT_REHARVEST = "REHARVEST";
     private static final String OPTION_LONG_REHARVEST = "";
     private static final String OPTION_START_HARVEST = "harvest";
+    private static final String OPTION_START_HARVEST_TARGETS = "harvest_target_repositories";
     private static final String OPTION_SHORT_ONLY_UPDATE_LICENCES = "oul";
     private static final String OPTION_LONG_ONLY_UPDATE_LICENCES = "only-update-licences";
     private static final String OPTION_SHORT_LIST_REPOS = "rlist";
@@ -52,6 +54,9 @@ public class CommandLineHandler {
     public boolean FLAG_DISABLE_REPOSITORY = false;
     public int SET_REPOSITORY_ID;
     public String SET_REPO_JSON_FILE = "";
+
+    public boolean FLAG_HARVEST_TARGET_REPOSITORIES = false;
+    public List<Integer> SET_TARGET_REPOSITORY_IDS = new ArrayList<>();
 
     private static final String RESET_DATABASE_CONFIRMATION = "RESET-THE-DATABASE";
 
@@ -109,6 +114,13 @@ public class CommandLineHandler {
                 }
                 if(commandLine.hasOption(OPTION_START_HARVEST)) {
                     FLAG_START_HARVEST = true;
+                }
+                if(commandLine.hasOption(OPTION_START_HARVEST_TARGETS)) {
+                    FLAG_HARVEST_TARGET_REPOSITORIES = true;
+                    List<String> targets_ids = Arrays.asList(commandLine.getOptionValues(OPTION_START_HARVEST_TARGETS));
+                    for(String target_id : targets_ids) {
+                        SET_TARGET_REPOSITORY_IDS.add(Integer.parseInt(target_id));
+                    }
                 }
                 if(commandLine.hasOption(OPTION_SHORT_ONLY_UPDATE_LICENCES)) {
                     FLAG_ONLY_UPDATE_LICENCES = true;
@@ -183,6 +195,12 @@ public class CommandLineHandler {
         Option start_harvest_option = Option.builder(OPTION_START_HARVEST)
                 .desc("start harvesting with current configuration")
                 .build();
+        Option start_target_harvest_option = Option.builder(OPTION_START_HARVEST_TARGETS)
+                .desc("start harvesting the target repositories by their ID with current configuration")
+                .hasArgs()
+                .numberOfArgs(Option.UNLIMITED_VALUES)
+                .argName("ID_1> <ID_2> <...")
+                .build();
         Option initialize_database_option = Option.builder(OPTION_SHORT_INIT)
                 .longOpt(OPTION_LONG_INIT)
                 .desc("Initialize the database (should only done once when installing the harvester, data preservation " +
@@ -241,6 +259,7 @@ public class CommandLineHandler {
         options.addOption(show_help_option);
         options.addOption(config_directory_option);
         options.addOption(start_harvest_option);
+        options.addOption(start_target_harvest_option);
         options.addOption(initialize_database_option);
         options.addOption(only_update_licences_option);
         options.addOption(list_repositories_option);

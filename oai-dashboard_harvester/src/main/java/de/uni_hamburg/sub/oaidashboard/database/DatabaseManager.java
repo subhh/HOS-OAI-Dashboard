@@ -206,6 +206,17 @@ public class DatabaseManager {
         return repositories;
     }
 
+    public List<Repository> getActiveReposFromDB(List<Integer> target_ids) {
+        List<Repository> all_repositories = getActiveReposFromDB();
+        List<Repository> target_repositories = new ArrayList<>();
+        for(Repository repository : all_repositories) {
+            if(target_ids.contains(repository.getId())) {
+                target_repositories.add(repository);
+            }
+        }
+        return target_repositories;
+    }
+
     public List<Repository> getActiveReposFromDB() {
         List<Repository> repositories = null;
         Session session = factory.openSession();

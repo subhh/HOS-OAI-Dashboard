@@ -98,7 +98,10 @@ public class HarvestingManager {
 
 				readConfigFromProperties();
 
-				List<Repository> repositories = dbMan.getActiveReposFromDB();
+				List<Repository> repositories =  dbMan.getActiveReposFromDB();
+				if(clHandler.FLAG_HARVEST_TARGET_REPOSITORIES) {
+					repositories = dbMan.getActiveReposFromDB(clHandler.SET_TARGET_REPOSITORY_IDS);
+				}
 				resetGitDirectory(); // TODO: evaluate if this must be called only when START_HARVEST is true
 				initDirectories();
 				LicenceManager.initManager(dbMan.getSessionFactory(), LICENCE_FILE);
@@ -146,7 +149,12 @@ public class HarvestingManager {
 		if(clHandler.FLAG_START_HARVEST) {
 			logger.info("Starting harvesting run");
 			START_HARVEST = true;
-		} else {
+		}
+		if(clHandler.FLAG_HARVEST_TARGET_REPOSITORIES) {
+			logger.info("Starting harvesting run with target repository IDs: {}", clHandler.SET_TARGET_REPOSITORY_IDS);
+			START_HARVEST = true;
+		}
+		if(!clHandler.FLAG_START_HARVEST && !clHandler.FLAG_HARVEST_TARGET_REPOSITORIES) {
 			logger.info("### Not starting a harvesting run (not issued), see help for more information ###");
 		}
 		if(clHandler.FLAG_ONLY_UPDATE_LICENCES) {

@@ -6,13 +6,13 @@ import de.uni_hamburg.sub.oaidashboard.database.datastructures.*;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.jvnet.hk2.internal.Collector;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -439,18 +439,45 @@ public class RestApi {
             factory.close();
         }
 
-        return stateList;
+        return filterStates(stateList);
+    }
+
+    /**
+     * Makes sure, that for each Date (year/month/day) and Repository only the most recent HarvestingState gets returned
+     * @param stateList
+     * @return a stateList that for each Date (year/month/day) and Repository only has the most recent HarvestingState
+     */
+    private List<HarvestingState> filterStates(List<HarvestingState> stateList) {
+        List<HarvestingState> filteredStates = new ArrayList<>();
+
+        // first: group by repository id
+        Map<Integer, Set<HarvestingState>> groupedById = stateList.stream()
+                .collect(Collectors.groupingBy(s -> s.getRepository().getId(), Collectors.toSet()));
+        //logger.info("Grouped by Repository ID: {}", groupedById);
+
+        // second: group by day/month/year -> date
+        Function<HarvestingState, Date> dateFunc =
+                state -> DateUtils.truncate(new Date(state.getTimestamp().getTime()), Calendar.DATE);
+        for(Map.Entry<Integer, Set<HarvestingState>> idGroup : groupedById.entrySet()) {
+            Map<Date, Set<HarvestingState>> groupedByDate = idGroup.getValue().stream()
+                    .collect(Collectors.groupingBy(s -> dateFunc.apply(s), Collectors.toSet()));
+            //logger.info("Grouped by Date: {}", groupedByDate);
+
+            // third: take only the most recent state of each date group
+            for(Map.Entry<Date, Set<HarvestingState>> dateGroup : groupedByDate.entrySet()) {
+                HarvestingState latest = Collections.max(dateGroup.getValue(), Comparator.comparing(HarvestingState::getTimestamp));
+                filteredStates.add(latest);
+            }
+        }
+
+        return filteredStates;
     }
 
     private HarvestingState getStateFromDB(int repo_id, Date timepoint) {
         HarvestingState state = null;
         List<HarvestingState> stateList = getStatesFromDB(repo_id, timepoint, timepoint);
         if(stateList.size() > 0) {
-            /*
-            * Todo: what if we find multiple states?
-            * This corresponds to the question, what happens if we harvest the same repository twice
-            * As dicussed, the "current" State should then be marked...
-            */
+            // because of the method 'filterStates', the stateList in this case should never be bigger then 1
             state = stateList.get(0);
         }
         return state;
@@ -476,7 +503,7 @@ public class RestApi {
             session.close();
             factory.close();
         }
-        return stateList;
+        return filterStates(stateList);
     }
 
     private List<Repository> getReposFromDB() {

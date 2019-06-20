@@ -54,18 +54,28 @@ These packages can be installed via apt.
     - harvester.git.persistence.dir
     - ...
   - example properties-file can be found in `src/main/resources/harvester.properties_example`
-- A customized hibernate configuration file `hibernate.cfg.xml` can also be placed in `~/.oai-dashboard` which will then be loaded instead of the on in the classpath (`resources/hibernate.cfg.xml`), this applies only to oai-dashboard_harvester
+- A customized hibernate configuration file `hibernate.cfg.xml` can also be placed in `~/.oai-dashboard` which will then be loaded instead of the one in the classpath (`resources/hibernate.cfg.xml`), this applies only to oai-dashboard_harvester
 - When not using a hibernate configuration file in the config directory (`~/.oai-dashboard`), changes to the hibernate configuration (classpath) always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone JAR-file
+
+## Setting-Up (harvester)
+The standalone JAR-file of the harvester (by default named: oai-dashboard-harvester-jar-with-dependencies.jar) can be used with a standard `java -jar` command. The harvester can be fully controlled by its command line interface, see `java -jar [...].jar -h` for all provided commands.
+
+- before the first harvest, the Database needs to be initialized with the `-I` option (`java -jar [...].jar -I`
+- after initializing, the Database still has no configured repositories as targets for harvesting by default, they can be added into the database using JSON-files
+  - to add new repositories into the database, use the `-ladd <filepath>` option (newly added repositories are ACTIVE by default)
+  - a default set of five repositories is provided in the `src/main/resources/default_repositories`-folder
+
+## Using/Running (harvester)
+- use option `-harvest` to start harvesting all configured repositories with state ACTIVE
+- use option `-harvest_target_repositories <ID_1> <ID_2 <...>` to start harvesting specific configured repositories that are ACTIVE
+- use option `-rlist` to list all configured repositories and their IDs
+- use option `-ractivate <repository_ID>` or `-rdisable <repository_ID>` to activate/disable repositories
+- use option `-rupdate <repository_ID> <filepath>` to update/edit a target repository from a JSON-file
+- when you do not want to use the default configuration directory (`~/.oai-dashboard`) you can use the option `-c <configuration directory>` to provide a different one
 
 ## Configuration (REST-API)
 - resources/hibernate.cfg.xml: Configuration of the database (currently the hibernate.cfg.xml exists in both projects but should be identical, except when the access to the database is different from the server running tomcat, i.e. docker-compose)
 - Changes to the hibernate configuration always require a rebuild (`mvn clean install`) and possible re-deployment of the standalone WAR-file
-
-## Running (harvester)
-Parameters:
-- `-RESET true/false` -> resets the database, for development only
-- `-REHARVEST true/false`-> restarts harvesting. Harvesting is done automatically when no data is found.
-harvesting sould be run every day
 
 ## Running (REST-API)
 - place the WAR-file as output of the build process in the appropriate tomcat folder

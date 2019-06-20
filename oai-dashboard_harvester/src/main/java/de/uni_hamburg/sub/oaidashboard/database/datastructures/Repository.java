@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.sql.Timestamp;
 import java.util.Base64;
+import java.util.UUID;
 
 @Entity
 @Table(name = "REPOSITORY",
@@ -29,7 +30,7 @@ public class Repository {
 
 	@JsonIgnore
 	@NotNull
-	@Size(max=150)
+	@Size(max=250)
 	private String initialDirectoryHash;
 
 	@NotNull
@@ -195,12 +196,12 @@ public class Repository {
 	}
 
 	private String createHash(String url) {
-
+		UUID uuid = UUID.randomUUID();
 		String hash = null;
 		try {
 			hash = (String) File.separator 
 	    			+ Base64.getUrlEncoder().withoutPadding().encodeToString(
-	    					("#oai_dc#" + url).getBytes("UTF-8"));
+	    					(uuid.toString() + url).getBytes("UTF-8"));
 		}
 		catch (UnsupportedEncodingException ex) {
 			System.err.println("Caught Exception: " + ex.getMessage());

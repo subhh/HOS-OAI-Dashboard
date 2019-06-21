@@ -22,7 +22,7 @@ import de.uni_hamburg.sub.oaidashboard.harvesting.datastructures.MethaIdStructur
 
 
 @RunWith(JUnitPlatform.class)
-public class RecordsFromXMLTest {
+public class ParseHarvestedDataTest {
 	static String pathToEnvironmentFiles = null;
 //	String getProgramPath(TestInfo testinfo) {
 	void init() {

@@ -387,9 +387,11 @@ public class RestApi {
     }
 
     private void applyMappings(HarvestingState state) {
-        List<HarvestingState> stateList = new ArrayList<>();
-        stateList.add(state);
-        applyMappings(stateList);
+        if(state != null) {
+            List<HarvestingState> stateList = new ArrayList<>();
+            stateList.add(state);
+            applyMappings(stateList);
+        }
     }
 
     private void applyMappings(List<HarvestingState> stateList) {

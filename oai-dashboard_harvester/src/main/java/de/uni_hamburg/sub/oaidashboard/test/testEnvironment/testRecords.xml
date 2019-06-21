@@ -1,0 +1,291 @@
+<?xml version="1.0"?>
+<Response>
+  <responseDate>2019-04-18T11:31:25Z</responseDate>
+  <request verb="ListRecords" set="" metadataPrefix="oai_dc"/>
+  <error code=""/>
+  <GetRecord>
+    <record>
+      <header status=""/>
+      <metadata/>
+      <about/>
+    </record>
+  </GetRecord>
+  <Identify/>
+  <ListIdentifiers/>
+  <ListMetadataFormats/>
+  <ListRecords>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/3</identifier>
+        <datestamp>2019-03-19T13:23:36Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>ddc:020</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Wilhelm Ostwald, the "Br&#xFC;cke" (Bridge), and connections to other bibliographic activities at the beginning of the twentieth century</dc:title>
+          <dc:creator>Hapke, Thomas</dc:creator>
+          <dc:subject>Wilhelm Ostwald</dc:subject>
+          <dc:subject>information science</dc:subject>
+          <dc:subject>history</dc:subject>
+          <dc:subject>Informationssystem</dc:subject>
+          <dc:subject>Geschichte</dc:subject>
+          <dc:subject>Ostwald, Wilhelm</dc:subject>
+          <dc:subject>Informations- und Dokumentationswissenschaft</dc:subject>
+          <dc:subject>020</dc:subject>
+          <dc:subject>H.3:INFORMATION STORAGE AND RETRIEVAL</dc:subject>
+          <dc:subject>H.3</dc:subject>
+          <dc:subject>ddc:020</dc:subject>
+          <dc:description>This paper gives a summary of the activities of the German chemist and Nobel laureate Wilhelm Ostwald (1853 - 1932) in the area of scholarly information, communication, and publication at the beginning of the twentieth century. In 1911 Ostwald, with others, founded the "Br&#xFC;cke" (Bridge), an organization with aims similar to those of the famous Institut International de Bibliographie in Brussels. The paper looks at connections to other institutions and individuals in the area of documentation and information science, especially in Germany, for example, the Institut f&#xFC;r Techno-Bibliographie and the German librarian Julius Hanauer, one of the German promoters of the Universal Decimal Classification.</dc:description>
+          <dc:date>1999-01-01</dc:date>
+          <dc:type>inProceedings</dc:type>
+          <dc:type>doc-type:contributionToPeriodical</dc:type>
+          <dc:format>application/pdf</dc:format>
+          <dc:identifier>http://dx.doi.org/10.15480/882.1</dc:identifier>
+          <dc:identifier>1-57387-080-3</dc:identifier>
+          <dc:identifier>508363829</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/3</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-225</dc:identifier>
+          <dc:identifier>10.15480/882.1</dc:identifier>
+          <dc:identifier>11420/3</dc:identifier>
+          <dc:identifier>930767838</dc:identifier>
+          <dc:language>eng</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+          <dc:publisher>Information Today</dc:publisher>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/4</identifier>
+        <datestamp>2018-12-03T10:52:19Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>ddc:020</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Informationskompetenz und studentisches Lernen im elektronischen Zeitalter : Problemfelder und Praxisans&#xE4;tze in einer Technischen Universit&#xE4;t.</dc:title>
+          <dc:title>Information literacy and student learning in the electronic age : fields of problems and practical approaches in an university of technology</dc:title>
+          <dc:creator>Hapke, Thomas</dc:creator>
+          <dc:subject>information literacy, engineering education, university library, lifelong learning</dc:subject>
+          <dc:subject>Informationskompetenz</dc:subject>
+          <dc:subject>Universit&#xE4;tsbibliothek</dc:subject>
+          <dc:subject>Lebenslanges Lernen</dc:subject>
+          <dc:subject>Ingenieurstudent</dc:subject>
+          <dc:subject>020</dc:subject>
+          <dc:subject>H.3.m:Miscellaneous</dc:subject>
+          <dc:subject>K.3.1:Computer Uses in Education</dc:subject>
+          <dc:subject>K.3.2:Computer and Information Science Education</dc:subject>
+          <dc:subject>K.3.2</dc:subject>
+          <dc:subject>H.3.m</dc:subject>
+          <dc:subject>K.3.1</dc:subject>
+          <dc:subject>ddc:020</dc:subject>
+          <dc:description>Die Integration der Vermittlung von allgemeiner und fachlicher&#xD;
+Informationskompetenz in das Lernen und Lehren an unseren Universit&#xE4;ten ist&#xD;
+eine wichtige Voraussetzung f&#xFC;r die zeitgem&#xE4;sse Qualifizierung von&#xD;
+Hochschulabsolventen. Der Beitrag gibt eine &#xDC;bersicht zur Ausgangssituation, zu&#xD;
+Problemen, Zielen, Inhalten und Methoden der Vermittlung von&#xD;
+Informationskompetenz im Rahmen studentischen Lernens aus der Sicht der&#xD;
+Universit&#xE4;tsbibliothek einer Technischen Universit&#xE4;t.</dc:description>
+          <dc:date>2002-01-01</dc:date>
+          <dc:type>inProceedings</dc:type>
+          <dc:type>doc-type:contributionToPeriodical</dc:type>
+          <dc:identifier>http://dx.doi.org/10.15480/882.2</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/4</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-372</dc:identifier>
+          <dc:identifier>10.15480/882.2</dc:identifier>
+          <dc:identifier>11420/4</dc:identifier>
+          <dc:identifier>930767926</dc:identifier>
+          <dc:language>ger</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/5</identifier>
+        <datestamp>2018-12-04T10:41:57Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>doc-type:doctoralThesis</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Interface characterization of metal-gate MOS-structures and the application to DRAM-capacitors</dc:title>
+          <dc:creator>Sell, Bernhard</dc:creator>
+          <dc:contributor>Krautschneider, Wolfgang</dc:contributor>
+          <dc:subject>MOS-structure</dc:subject>
+          <dc:subject>DRAM</dc:subject>
+          <dc:subject>MOS</dc:subject>
+          <dc:subject>Dynamisches RAM</dc:subject>
+          <dc:subject>620</dc:subject>
+          <dc:subject>B.3.1:Semiconductor Memories (NEW) (B.7.1)</dc:subject>
+          <dc:subject>B.3.1</dc:subject>
+          <dc:subject>ddc:620</dc:subject>
+          <dc:description>Viele Applikationen der modernen Informationstechnologie ben&#xF6;tigen einen Arbeitsspeicher mit kurzen Schreib- und Lesezeiten sowie geringen Kosten pro Bit. Moderne DRAMs sind zur Zeit die einzigen Schaltkreise, die diese Anforderungen erf&#xFC;llen. Eine kontinuierliche Verkleinerung der Strukturabmessungen ist f&#xFC;r die Erh&#xF6;hung der Produktivit&#xE4;t&#xD;
+und somit f&#xFC;r eine weitere Verringerung der Kosten pro Bit erforderlich. Gleichzeitig bleibt jedoch die Kapazit&#xE4;t der DRAM Speicherzelle mit jeder Generation konstant, was zu dreidimensionalen Kondensatoren mit hohen Aspektverh&#xE4;ltnissen und hohen Reihenwiderst&#xE4;nden f&#xFC;hrt. Nach der ITRS Roadmap mu&#xDF; daher ab der 70 nm Generation das &#xFC;blicherweise verwendete polykristalline Silizium durch ein Material mit h&#xF6;herem Leitwert ersetzt werden.&lt;br /&gt;&#xD;
+In dieser Arbeit wird ein Stapel aus polykristallinem Silizium und einer d&#xFC;nnen Metallschicht als geeigneter Ersatz f&#xFC;r das reine Silizium vorgeschlagen. Es wird eine vollst&#xE4;ndige Analyse-Prozedur f&#xFC;r Metall-Gate MOS-Strukturen entwickelt, die die Identifizierung von Problemen w&#xE4;hrend der Prozessierung und die Extraktion physikalischer Parameter erm&#xF6;glicht. Aus Simulationen von MOS-Kondensatoren werden Gr&#xF6;&#xDF;en gewonnen, die eine automatische Extraktion der Flachbandspannung und der physikalischen Oxyddicke zulassen und dabei eine Genauigkeit von 1-2 &#xB0;A verglichen mit ellipsometrischen Messungen und IV-Analysen zeigen. Weiterhin wird ein verbessertes Modell zur Simulation des Leckstroms pr&#xE4;sentiert welches die Me&#xDF;daten f&#xFC;r alle untersuchten Spannungen und Oxyddicken sehr gut beschreibt. Zur Anwendung der Analyse-Prozedur werden ein Testchip und dazugeh&#xF6;rige Prozesstechnologie f&#xFC;r Metall-Gate MOS-Strukturen auf Kurzdurchl&#xE4;ufern und auf vollintegrierten Losen entwickelt. TiN-Gate Strukturen werden benutzt, um einen Prozess zur TiN Atomlagen-Abscheidung zu charakterisieren, Probleme zu identifizieren und diese zu l&#xF6;sen.&lt;br /&gt;&#xD;
+Die thermische Stabilit&#xE4;t reiner Metall-Gate Elektroden ist f&#xFC;r eine DRAM Anwendung mit Grabenkondensatoren nicht ausreichend. Ein Stapel von 25 nm polykristallinem Silizium und 20 nm TiN wird als geeignete niederohmige Grabenf&#xFC;llung identifiziert, die bis zu 1050 &#xB1;C stabil ist. Um solch ein Materialsystem in einen DRAM zu integrieren muss das Metall in tiefen Gr&#xE4;ben mit guter Kantenbedeckung abgeschieden werden. Zu diesem Zweck wird die Gasphasenabscheidung von Wolfram Silizid untersucht und das gleichzeitige Erreichen von guter Kantenbedeckung und einer thermisch stabilen Zusammensetzung als gr&#xF6;&#xDF;te Herausforderung identifiziert. Ein Abscheide-Regime f&#xFC;r solch einen Proze&#xDF; wird vorgeschlagen, das jedoch au&#xDF;erhalb des in dieser Arbeit zug&#xE4;nglichen Bereiches liegt. Auf der anderen Seite wird eine TiN Atomlagen-Abscheidung erfolgreich modifiziert um 70% Kantenbedeckung in Gr&#xE4;ben mit einem Aspektverh&#xE4;ltnis von 40:1 zu erhalten. Mit diesem Proze&#xDF; werden Grabenkondensatoren hergestellt, die eine 60 s Temperung bei 1050 &#xB1;C aushalten und gleichzeitig die Anforderungen f&#xFC;r den Leckstrom und die Kapazit&#xE4;at erf&#xFC;llen. Zusammenfassend erm&#xF6;glichen die in dieser Arbeit pr&#xE4;sentierten Ergebnisse die Herstellung von niederohmigen Grabenf&#xFC;llungen von DRAM-Kondensatoren so wie sie f&#xFC;r eine 70 nm Technologie-Generation ben&#xF6;tigt werden.</dc:description>
+          <dc:description>The main result of this study is the development of a full analysis procedure for metal-gate MOS-structures that allows to identify problems during processing and to extract physical parameters of metal electrodes. With knowledge gained from this analysis a polysilicon/TiN-stack has been developed and successfully integrated as low-resistance electrode into state-of-the-art deep trench DRAM-capacitors. These electrodes will be required to fabricate sub-100 nm deep trench DRAMs.</dc:description>
+          <dc:date>2002-01-01</dc:date>
+          <dc:type>Thesis</dc:type>
+          <dc:type>doc-type:doctoralThesis</dc:type>
+          <dc:identifier>http://dx.doi.org/10.15480/882.3</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/5</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-385</dc:identifier>
+          <dc:identifier>10.15480/882.3</dc:identifier>
+          <dc:identifier>11420/5</dc:identifier>
+          <dc:identifier>930767927</dc:identifier>
+          <dc:language>eng</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/6</identifier>
+        <datestamp>2019-01-16T10:48:02Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>doc-type:doctoralThesis</setSpec>
+        <setSpec>ddc:660</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Gegenstromtrennung von schwerfl&#xFC;chtigen Naturstoffen mit &#xFC;berkritischen komprimierten Gasen unter Verwendung von Schleppmitteln</dc:title>
+          <dc:title>Countercurrent separation of low volatile liquid natural products with supercritical gases</dc:title>
+          <dc:creator>Jungfer, Martin</dc:creator>
+          <dc:contributor>Brunner, Gerd</dc:contributor>
+          <dc:subject>Countercurrent SFE</dc:subject>
+          <dc:subject>palm oil</dc:subject>
+          <dc:subject>Palm&#xF6;l</dc:subject>
+          <dc:subject>Vitamin</dc:subject>
+          <dc:subject>Destraktion</dc:subject>
+          <dc:subject>Gegenstromprinzip</dc:subject>
+          <dc:subject>Schleppmittel</dc:subject>
+          <dc:subject>660</dc:subject>
+          <dc:subject>ddc:660</dc:subject>
+          <dc:description>In dieser Arbeit wurden Untersuchungen zur Anreicherung von Vitaminen aus rohem&#xD;
+Palm&#xF6;l durchgef&#xFC;hrt. Die im verwendeten &#xD6;l enthaltenen 300 ppm Tocochromanole&#xD;
+(Vitamin E) und 400 ppm &#x3B2;-Carotin (Provitamin A) sollen durch Gegenstromextraktion mit &#xFC;berkritischem Kohlendioxid angereichert werden.</dc:description>
+          <dc:description>The investigations deal with the enrichment of tocochromanoles (vitamin E) and beta-carotene (provitamin A) from crude palm oil. In a first separation step the tocochromanoles and free fatty acids are removed using countercurrent supercritical fluid extraction (SFE) with supercritical CO2. The refined oil is esterified and then fractionated in fatty acid methyl esters (FAME, bio diesel) and a mixture of countercurrent beta-carotene and FAME using SFE.</dc:description>
+          <dc:date>2000-01-01</dc:date>
+          <dc:type>Thesis</dc:type>
+          <dc:type>doc-type:doctoralThesis</dc:type>
+          <dc:identifier>http://dx.doi.org/10.15480/882.4</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/6</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-398</dc:identifier>
+          <dc:identifier>10.15480/882.4</dc:identifier>
+          <dc:identifier>11420/6</dc:identifier>
+          <dc:identifier>930767925</dc:identifier>
+          <dc:language>ger</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/7</identifier>
+        <datestamp>2019-03-19T13:15:30Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>ddc:540</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Die Zeitschrift f&#xFC;r physikalische Chemie - Ein Beitrag bibliothekarischer Zeitschriftenforschung</dc:title>
+          <dc:title>The first German journal for physical chemistry</dc:title>
+          <dc:creator>Hapke, Thomas</dc:creator>
+          <dc:subject>scientific journals</dc:subject>
+          <dc:subject>physical chemistry</dc:subject>
+          <dc:subject>Zeitschrift f&#xFC;r physikalische Chemie &lt;Leipzig&gt;</dc:subject>
+          <dc:subject>Zeitschrift f&#xFC;r physikalische Chemie &lt;M&#xFC;nchen&gt;</dc:subject>
+          <dc:subject>540</dc:subject>
+          <dc:subject>ddc:540</dc:subject>
+          <dc:description>Die Zeitschrift f&#xFC;r physikalische Chemie . Vortrag auf dem 65. Berliner Wissenschaftshistorischen Kolloquium des Bereiches Wissenschaftsgeschichte am Institut f&#xFC;r Theorie, Geschichte und Organisation der Wissenschaften der Akademie der Wissenschaften Berlin am 18.6.1991. &#xD;
+(Zusammenfassung von Thomas Hapke: Die Zeitschrift f&#xFC;r physikalische Chemie : 100 Jahre Wechselwirkung zwischen Fachwissenschaft, Kommunikationsmedium und Gesellschaft. Herzberg: Bautz, 1990.)</dc:description>
+          <dc:description>The first German journal for physical chemistry "Zeitschrift f&#xFC;r physikalische Chemie"</dc:description>
+          <dc:date>1991-01-01</dc:date>
+          <dc:type>inProceedings</dc:type>
+          <dc:type>doc-type:contributionToPeriodical</dc:type>
+          <dc:identifier>http://dx.doi.org/10.15480/882.5</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/7</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-426</dc:identifier>
+          <dc:identifier>10.15480/882.5</dc:identifier>
+          <dc:identifier>11420/7</dc:identifier>
+          <dc:identifier>930767928</dc:identifier>
+          <dc:language>ger</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <record>
+      <header status="">
+        <identifier>oai:tore.tuhh.de:11420/8</identifier>
+        <datestamp>2019-01-16T12:37:34Z</datestamp>
+        <setSpec>com_11420_1</setSpec>
+        <setSpec>col_11420_2</setSpec>
+        <setSpec>open_access</setSpec>
+        <setSpec>doc-type:doctoralThesis</setSpec>
+        <setSpec>doc-type:ResearchData</setSpec>
+        <setSpec>ddc:620</setSpec>
+      </header>
+      <metadata>
+        <oai_dc:dc xmlns:oai_dc="http://www.openarchives.org/OAI/2.0/oai_dc/" xmlns:doc="http://www.lyncode.com/xoai" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dc="http://purl.org/dc/elements/1.1/" xsi:schemaLocation="http://www.openarchives.org/OAI/2.0/oai_dc/ http://www.openarchives.org/OAI/2.0/oai_dc.xsd">
+          <dc:title>Tribologie und Fluidverhalten in der Dichtzone von Radialwellendichtringen unter Ber&#xFC;cksichtigung makromolekularer Bestandteile der Schmierfluide</dc:title>
+          <dc:title>Tribology and fluid behavior of rotary shaft seals ...</dc:title>
+          <dc:creator>Wiehler, Kay</dc:creator>
+          <dc:contributor>V&#xF6;tter, Manfred</dc:contributor>
+          <dc:subject>tribology</dc:subject>
+          <dc:subject>rotary shaft seals</dc:subject>
+          <dc:subject>rheology</dc:subject>
+          <dc:subject>Wellendichtung</dc:subject>
+          <dc:subject>Dichtring</dc:subject>
+          <dc:subject>Elastohydrodynamische Schmierung</dc:subject>
+          <dc:subject>Rheologische Eigenschaft</dc:subject>
+          <dc:subject>Tribologie</dc:subject>
+          <dc:subject>620</dc:subject>
+          <dc:subject>ddc:620</dc:subject>
+          <dc:description>Der Radialwellendichtring (RWDR) ist selbst beim heutigen Stand der Technik in seiner Funktion nicht ausreichend beherrscht. Konzipiert f&#xFC;r die ber&#xFC;hrende Abdichtung von Wellendurchtritten in Geh&#xE4;usen, soll ein Austritt des Schmiermediums in die Umwelt und das Eindringen von Schmutz aus der Umwelt in das Geh&#xE4;use verhindert werden. Vorliegende Arbeit analysiert die RWDR/Welle/Fluid-Paarung aus der Perspektive des Fluids. Der komplexen Vorg&#xE4;nge in der RWDR-Dichtzone wird durch die versuchstechnische und theoretische Betrachtung der tribologischen Vorg&#xE4;nge bis in den Sub-Mikrometer-Bereich Rechnung getragen. Aus den Ergebnissen wird ein tribologisches 3-Schichtmodell und die zugeh&#xF6;rige allgemeine Reibungskurve entwickelt. Ausgehend von der RWDR-Funktionshypothese von Oliveira wird eine Betrachtung des Verhaltens der makromolekularen Bestandteile im Fluid durchgef&#xFC;hrt. Geometriebedingt existiert in der RWDR-Dichtzone und an ihren R&#xE4;ndern ein Scherratengradient, der eine ungleichm&#xE4;&#xDF;ige Belastung der makromolekularen Bestandteile hervorruft. Die Auswirkung eines Scherratengradienten auf die Zusammensetzung einer polymeren L&#xF6;sung wird experimentell untersucht. Die Ergebnisse aus dem Scherversuch deuten auf eine Konzentrationserh&#xF6;hung der polymeren Bestandteile im Bereich der h&#xF6;chsten Scherraten hin. Dieses Ergebnis kann als ein Indiz f&#xFC;r die G&#xFC;ltigkeit der RWDR-Funktionshypothese von Oliveira gesehen werden.</dc:description>
+          <dc:description>Tribology and fluid behavior of rotary shaft seals ...</dc:description>
+          <dc:date>2002-01-01</dc:date>
+          <dc:type>Thesis</dc:type>
+          <dc:type>doc-type:doctoralThesis</dc:type>
+          <dc:identifier>http://dx.doi.org/10.15480/882.6</dc:identifier>
+          <dc:identifier>http://tubdok.tub.tuhh.de/handle/11420/8</dc:identifier>
+          <dc:identifier>urn:nbn:de:gbv:830-opus-462</dc:identifier>
+          <dc:identifier>10.15480/882.6</dc:identifier>
+          <dc:identifier>11420/8</dc:identifier>
+          <dc:identifier>930767839</dc:identifier>
+          <dc:language>ger</dc:language>
+          <dc:rights>info:eu-repo/semantics/openAccess</dc:rights>
+        </oai_dc:dc>
+      </metadata>
+      <about/>
+    </record>
+    <resumptionToken>oai_dc////100</resumptionToken>
+  </ListRecords>
+  <ListSets/>
+</Response>

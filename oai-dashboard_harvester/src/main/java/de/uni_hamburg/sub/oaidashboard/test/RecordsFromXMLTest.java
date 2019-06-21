@@ -71,7 +71,7 @@ public class RecordsFromXMLTest {
 	        assertEquals(instance.formats.get(3).metadataNamespace, "http://www.openarchives.org/OAI/2.0/oai_dc/");
 	        assertEquals(instance.identify.repositoryName, "TORE TUHH Open Research");
 	        assertEquals(instance.identify.baseURL, "http://tubdok.tub.tuhh.de/oai/request");
-	        assertEquals(instance.sets.size(), 138);
+	        assertEquals(instance.sets.size(), 137);
 	        assertEquals(instance.sets.get(0).setName, "Biography, genealogy, insignia");
 	        assertEquals(instance.sets.get(0).setSpec, "ddc:920");
         } catch (Exception e) {

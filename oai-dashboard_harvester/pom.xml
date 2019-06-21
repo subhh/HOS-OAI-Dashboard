@@ -17,15 +17,28 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+	<junit.jupiter.version>5.4.2</junit.jupiter.version>
+	<junit.platform.version>1.4.2</junit.platform.version>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
-    </dependency>
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-engine</artifactId>
+		<version>${junit.jupiter.version}</version>
+	</dependency>
+	<dependency>
+		<groupId>org.junit.jupiter</groupId>
+		<artifactId>junit-jupiter-api</artifactId>
+		<version>${junit.jupiter.version}</version>
+		<scope>test</scope>
+	</dependency>
+	<dependency>
+		<groupId>org.junit.platform</groupId>
+		<artifactId>junit-platform-runner</artifactId>
+		<version>${junit.platform.version}</version>
+		<scope>test</scope>
+	</dependency>
     <dependency>
     	<groupId>org.hibernate</groupId>
     	<artifactId>hibernate-agroal</artifactId>

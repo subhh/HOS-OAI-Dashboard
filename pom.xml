@@ -6,12 +6,6 @@
   <version>0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>oai-dashboard combined</name>
-  <description>Description</description>
-  <prerequisites>
-    <maven>3.2.2</maven>
-  </prerequisites>
-  <build>
-  </build>
   <modules>
     <module>oai-dashboard_harvester</module>
     <module>oai-dashboard_rest</module>

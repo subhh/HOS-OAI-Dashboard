@@ -120,7 +120,7 @@
               <executions>
                   <execution>
                       <id>make-assembly</id> <!-- this is used for inheritance merges -->
-                      <phase>install</phase> <!-- bind to the packaging phase -->
+                      <phase>package</phase> <!-- bind to the packaging phase -->
                       <goals>
                           <goal>single</goal>
                       </goals>
